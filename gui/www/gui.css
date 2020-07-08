@@ -1,0 +1,50 @@
+/*body {
+  margin: 10px;
+}*/
+
+/*body {
+  margin : 0;
+  font   : normal 1em Verdana, sans-serif;
+  height : 100%;
+}*/
+
+input[type="text"] {
+    width: 100px;
+}
+
+div {
+    margin: 10px;
+    padding: 5px;
+}
+
+.matchDiv {
+background-color: rgba(255, 0, 0, 0.2);
+border-style: dotted;
+border-width: 1px;
+margin-right: 4px;
+padding: 2px;
+}
+
+.conditionDiv {
+background-color: rgba(0, 0, 255, 0.2);
+border-style: dotted;
+border-width: 1px;
+margin-right: 4px;
+padding: 2px;
+}
+
+.updateDiv {
+background-color: rgba(0, 255, 255, 0.2);
+border-style: dotted;
+border-width: 1px;
+margin-right: 4px;
+padding: 2px;
+}
+
+.actionDiv {
+background-color: rgba(0, 255, 0, 0.2);
+border-style: dotted;
+border-width: 1px;
+margin-right: 4px;
+padding: 2px;
+}

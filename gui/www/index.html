@@ -1,0 +1,107 @@
+<head>
+<link rel="stylesheet" type="text/css" href="gui.css">
+<link rel="stylesheet" type="text/css" href="fsm.css">
+<script src="gui.js"></script>
+<script src="fsm.js"></script>
+</head>
+<body>
+<div style="background-color:rgba(255, 0, 0, 0.2); width:60%">
+<select id="matchField">
+  <option value="matchField">matchField</option>
+  <!-- <option value="ip">ip</option>
+  <option value="eth">eth</option>
+  <option value="port">port</option> -->
+</select>
+==
+<input type="text" value="" id="matchValue">
+<a href="#" id="addMatch" onclick="addMatch()">ADD MATCH</a>
+</div>
+
+<div style="background-color:rgba(0, 0, 255, 0.2); width:60%">
+<input type="text" value="" id="condOperand1">
+<select id="condOperator">
+  <option value=""></option>
+  <option value=">">></option>
+  <option value=">=">>=</option>
+  <option value="<"><</option>
+  <option value="<="><=</option>
+  <option value="==">==</option>
+  <option value="!=">!=</option>
+</select>
+<input type="text" value="" id="condOperand2">
+<a href="#" id="addCondition" onclick="addCondition()">ADD CONDITION</a>
+</div>
+
+<div style="background-color:rgba(0, 255, 255, 0.2); width:60%">
+<input type="text" value="" id="updateOutput">
+=
+<input type="text" value="" id="updateOperand1">
+<select id="updateOperation">
+  <option value=""></option>
+  <option value="+">+</option>
+  <option value="-">-</option>
+  <option value=">>">>></option>
+  <option value="<<"><<</option>
+  <option value="*">*</option>
+</select>
+<input type="text" value="" id="updateOperand2">
+<a href="#" id="addUpdate" onclick="addUpdate()">ADD UPDATE</a>
+</div>
+
+<div style="background-color:rgba(0, 255, 0, 0.2); width:60%">
+<select id="action">
+  <option value=""></option>
+  <option value="forward">forward</option>
+  <option value="_drop">_drop</option>
+  <option value="NoAction">NoAction</option>
+</select>
+<input type="text" value="" id="actionParam">
+<a href="#" id="setAction" onclick="setAction()">SET ACTION</a>
+</div>
+
+<div style="display: table;background-color:rgb(255,255,255);">
+  <table>
+    <tr>
+      <td>
+        <div style="display: table-row; margin: 8px;padding: 3px;">
+          <div style="display: table-cell;" id="matchesList"> </div>
+          <div style="display: table-cell;" id="conditionsList"> </div>
+          <div style="display: table-cell;" id="updateList"> </div>
+          <div style="display: table-cell;" id="actionList"> </div>
+        </div>
+      </td>
+      <td>
+        <a href="#" id="clearTransitionString" onclick="clearTransitionString()">CLEAR</a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<br>
+<label id=out></label>
+<table>
+  <tr>
+    <td><canvas id="canvas" width="800" height="400">
+<span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
+</canvas></td>
+    <td style="padding:10px">
+<a href="#" id="loadSample" onclick="loadSampleFSM()">LOAD SAMPLE FSM</a>
+<br><br>
+<a href="#" id="generateP4" onclick="generateP4()">GENERATE P4</a>
+<br><br>
+<a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a>
+<br><br>
+<br><br>
+  FSM designer instructions:<ul>
+  <li><b>Add a state:</b> double-click on the canvas</li>
+  <li><b>Add an arrow:</b> shift-drag on the canvas</li>
+  <li><b>Move something:</b> drag it around</li>
+  <li><b>Delete something:</b> click it and press the delete key</li>
+</ul></td>
+  </tr>
+</table>
+
+<br><br>
+Based on Finite State Machine Designer (<a href="http://madebyevan.com/fsm/">http://madebyevan.com/fsm/ - https://github.com/evanw/fsm</a>)
+</body>
+</html>
