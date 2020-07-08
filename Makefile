@@ -27,6 +27,7 @@ start_gui_docker:
 	$(info *** Starting GUI Docker container...)
 	@docker run --rm --name gui_opp -v ${curr_dir}/gui:/oppGui -p 8000:8000 -w /oppGui -d ${FLASK_IMG} \
 		python main_flask.py
+	@echo "*** The GUI is accessible from http://localhost:8000"
 
 stop_gui_docker:
 	$(info *** Stopping GUI Docker container...)
