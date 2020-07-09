@@ -34,4 +34,16 @@ Install the needed requirements from `gui/requirements.txt`, then run `make star
 from [http://localhost:8000](http://localhost:8000).
 
 ## TODOs
-Some TODOs for OPP.p4 are in the `OPP_loop.p4` file.
+### OPP.p4:
+- Look at `OPP_loop.p4` for TODOs
+- Move `pkt_action` table inside OPP_loop control and expose a DEFINE to define arbitrary actions
+- Add PTFs for OPP examples (issue: not able to read counters from PTFs due to [p4lang/PI#376](https://github.com/p4lang/PI/issues/376))
+
+### EFSM interpreter:
+- divide parse funcion in subfunction to ease testing
+- add unit testing
+
+### GUI:
+- Parse P4 or JSON for BMv2 to extract parser information to compile drop-down matchFields menu and possible actions
+- find a way to deal with actions parameters in state change actions
+- push geneated rules directly on a switch

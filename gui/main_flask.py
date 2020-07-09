@@ -1,8 +1,12 @@
 import json
 import io
+import logging
+
 from flask import Flask, request, send_file, redirect
 
-from parser import parse
+from efsm_interpreter import interpret_EFSM
+
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s][%(levelname)s] %(message)s ")
 app = Flask(__name__,  static_folder="www")
 
 
@@ -21,7 +25,7 @@ def static_files(path):
 def generate_p4():
     if request.method == 'POST':
         fsm_json = json.loads(request.data.decode('UTF-8'))
-        result = parse(json_str=fsm_json)
+        result = interpret_EFSM(json_str=fsm_json)
         mem = io.BytesIO()
         mem.write(result.encode("utf-8"))
         mem.seek(0)

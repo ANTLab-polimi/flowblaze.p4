@@ -1,7 +1,6 @@
 curr_dir := $(shell pwd)
 P4C_IMG := opennetworking/p4c:latest
 FLASK_IMG := "dmoro92/flask:latest"
-PYTHON_IMG := python:3.5-alpine3.11
 
 docker_build_flask:
 	cd gui/Docker && docker build -t ${FLASK_IMG} .
@@ -38,4 +37,7 @@ start_gui_local:
 	cd gui/; \
 	python3 main_flask.py
 
-
+test_efsm_interpreter:
+	$(info *** Running EFSM interpreter with rate_limiter JSON example...)
+	@docker run --rm --name test_efsm_interpreter -v ${curr_dir}/:/opp -w /opp ${FLASK_IMG} \
+		python ./gui/efsm_interpreter.py --input_file ./gui/examples/rate_limiter.json --output_file /dev/null --debug

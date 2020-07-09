@@ -38,6 +38,10 @@ CONDITIONS = OrderedDict([
     ('<'    ,   '0b100'),    # CONDITION_LT  = 0b100
 ])
 
+DEFAULT_PRIO_EFSM = "1"
+
+EQUAL = '='
+
 TEMPLATE_CONDITION = {
     'op1' : 0,
     'op2' : 0,
@@ -61,8 +65,6 @@ TEMPLATE_PACKET_ACTION = {
 TEMPLATE_SET_DEFAULT_condition_table = "table_set_default ingress.oppLoop.condition_table set_condition_fields " #{cond0} {op1_0} {op2_0} {operand1_0} {operand2_0} {cond1} {op1_1} {op2_1} {operand1_1} {operand2_1} {cond2} {op1_2} {op2_2} {operand1_2} {operand2_2} {cond3} {op1_3} {op2_3} {operand1_3} {operand2_3}"
 TEMPLATE_SET_DEFAULT_EFSMTable = "table_add ingress.oppLoop.EFSM_table define_operation_update_state {state_match} {c0_match} {c1_match} {c2_match} {c3_match} {OTHER_MATCH} => {dest_state} {operation_0} {result_0} {op1_0} {op2_0} {operand1_0} {operand2_0} {operation_1} {result_1} {op1_1} {op2_1} {operand1_1} {operand2_1} {pkt_action} {priority}"
 TEMPLATE_SET_PACKET_ACTIONS = "table_add ingress.pkt_action {action} {action_match} => {action_parameters} {priority}"
-TEMPLATE_DEFAULT_CONTEXT_LOOKUP = "table_set_default ingress.oppLoop.context_lookup lookup_context_table"
-
 
 lookup_fields = ['hdr.ipv4.srcAddr', 'hdr.ipv4.dstAddr', 'hdr.tcp.srcPort', 'hdr.tcp.dstPort']
 

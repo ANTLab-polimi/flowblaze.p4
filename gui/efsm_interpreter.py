@@ -1,62 +1,66 @@
-import json
+import argparse
 import copy
+import json
 import logging
 
 from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, POSSIBLE_PACKET_ACTION, \
-    TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, TEMPLATE_SET_DEFAULT_EFSMTable, \
-    TEMPLATE_SET_PACKET_ACTIONS
+    TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, \
+    TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL
 
-FILE_CONFIG = "state_machine.json"
-FILE_CONFIG = "rate_limiter.json"
-
-# POSSIBLE_CONDITIONS = ['<=', '>=', '>', '==', '<']
-# POSSIBLE_OPERATIONS = ['+', '-', '>>', '<<', '*']
-EQUAL = '='
+FILE_CONFIG = "examples/rate_limiter.json"
 
 
-# REMEMBER: CONDITIONS ARE ORDERED!!!!!!
+logger = logging.getLogger(__name__)
 
 
-#ipv4.srcAddr==10.0.0.1;ipv4.srcAddr==10.0.0.1;|cnt<=5;|cnt=cnt+1|fwd(6)
-def parse(json_str=None):
+# REMEMBER: CONDITIONS MUST BE ORDERED!!!!!!
+
+# TODO:
+#  - add argparse in main to parse input file and output file to ease test
+#  - divide parse funcion in subfunction to ease testing
+#  - add unit testing
+#  - add PTF/testvector output
+# Edges information:
+#  - Matches
+#  - Conditions
+#  - Register update
+#  - Actions
+# --> MATCHES|CONDITIONS|REG_UPDATE|ACTIONS
+# ipv4.srcAddr==10.0.0.1;ipv4.srcAddr==10.0.0.1;|cnt<=5;|cnt=cnt+1|fwd(6)
+def interpret_EFSM(json_str):
     output = ""
-    if json_str is None:
-        with open(FILE_CONFIG, mode='r') as f:
-            config = json.loads(f.read())
-    else:
-        config = json_str
 
-    nodes = config['nodes']
-    links = config['links']
+    nodes = json_str['nodes']
+    links = json_str['links']
 
     states = []
     for n in nodes:
         states.append(n['text'])
-    # print(states)
-    # print(config)
     edges = []
     flow_variables = set()
     conditions = set()
     reg_actions = set()
     pkt_actions = set()
-    for l in links:
-        if l['type'] == 'Link':
-            e = {'src': states[int(l['nodeA'])], 'dst': states[int(l['nodeB'])], 'transition': l['text']}
 
-        elif l['type'] == 'SelfLink':
-            e = {'src': l['node'], 'dst': l['node'], 'transition': l['text']}
+    # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
+    for link in links:
+        if link['type'] == 'Link':
+            e = {'src': states[int(link['nodeA'])], 'dst': states[int(link['nodeB'])], 'transition': link['text']}
+
+        elif link['type'] == 'SelfLink':
+            e = {'src': link['node'], 'dst': link['node'], 'transition': link['text']}
         else:
-            print("Other links")
+            logger.warning("Other link:" + str(link))
             continue
-        tmp = l['text'].split('|')
+        tmp = link['text'].split('|')
 
-        e['match'] = list(filter(lambda x: len(x) > 0, tmp[0].split(';')))
+        e['match'] = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
 
-        e['condition'] = list(filter(lambda x: len(x) > 0, tmp[1].split(';')))
+        e['condition'] = list(filter(lambda c: len(c) > 0, tmp[1].split(';')))
 
-        for c in e['condition']:
-            if len(c) > 0:
-                conditions.add(c)
+        for cond in e['condition']:
+            if len(cond) > 0:
+                conditions.add(cond)
 
         e['reg_action'] = list(filter(lambda x: len(x) > 0, tmp[2].split(';')))
         for ra in e['reg_action']:
@@ -73,21 +77,22 @@ def parse(json_str=None):
     # Now Flow Variable will contain a dict with ID and the name of the variables
     flow_variables = dict(enumerate(flow_variables))
     flow_variables_reverse = {v: k for k, v in flow_variables.items()}
-    # print(flow_variables_reverse)
+    logger.debug("Reversed flow variables: {}".format(flow_variables_reverse))
 
     conditions = dict(enumerate(conditions))
     conditions_reverse = {v: k for k, v in conditions.items()}
-    # print(conditions_reverse)
+    logger.debug("Reversed conditions: {}".format(conditions_reverse))
 
     reg_actions = dict(enumerate(reg_actions))
-    # print(reg_actions)
+    logger.debug("Actions on registers: {}".format(reg_actions))
 
     pkt_actions = dict(enumerate(pkt_actions))
     pkt_actions_reverse = {v: k for k, v in pkt_actions.items()}
+    logger.debug("Reversed packet actions: {}".format(pkt_actions_reverse))
 
     conditions_parsed = {}
     # ------------------------------ CONDITIONS -----------------------------------------------------------------
-    # Let's interpret the CONDITIONS
+    # Interpret the conditions, maximum
     for (i, c) in conditions.items():
         tmp_cond = copy.deepcopy(TEMPLATE_CONDITION)
         for pc in CONDITIONS.keys():
@@ -118,7 +123,7 @@ def parse(json_str=None):
                     # print(tmp_cond)
                 break
         conditions_parsed[c] = tmp_cond
-    print(conditions_parsed)
+    logger.info("Parsed Conditions: {}".format(conditions_parsed))
     # -----------------------------------------------------------------------------------------------------------
 
     # ------------------------------ FDV OPERATIONS -----------------------------------------------------------------
@@ -132,7 +137,7 @@ def parse(json_str=None):
             tmp_action['result'] = flow_variables_reverse[res]
             for po in OPERATIONS.keys():
                 if po in op:
-                    #po is the actual operation
+                    # po is the actual operation
                     tmp_action['operation'] = OPERATIONS[po]
                     act = op.split(po)
                     for (x, e) in enumerate(act):
@@ -157,12 +162,10 @@ def parse(json_str=None):
                                 tmp_action['op2'] = REGISTERS["EXPL"]
                                 tmp_action['operand2'] = int(e)
                     break
-            # print(tmp_action)
             fdv_actions_parsed[a] = tmp_action
         else:
-            print(res, 'is not a FLOW DATA VARIABLE')
-    print(fdv_actions_parsed)
-        # print(a, res, op)
+            logger.warning('{} is not a FLOW DATA VARIABLE'.format(res))
+    logger.info("FDV actions: {}".format(fdv_actions_parsed))
     # ---------------------------------------------------------------------------------------------------------------
 
     # ------------------------------ PACKET ACTIONS -----------------------------------------------------------------
@@ -172,57 +175,53 @@ def parse(json_str=None):
         for pa in POSSIBLE_PACKET_ACTION:
             if pa in pkt_a:
                 tmp_pkt_action['name'] = pa
-                print(pa, pkt_a)
                 tmp_pkt_action['parameters'] = pkt_a.replace(pa, '').replace('(', '').replace(')', '').split(',')
-                print(tmp_action)
                 break
         packet_actions_parsed[pkt_a] = tmp_pkt_action
-    print(packet_actions_parsed)
+    logger.info("Packet actions: {}".format(packet_actions_parsed))
     # ---------------------------------------------------------------------------------------------------------------
 
-    # ------------------------------------ Merge the PARSED PART with the actual transition edges -------------------
-    print(edges)
+    # ----------------------------- Augment edges with the previously parsed conditions and actions -----------------
     for e in edges:
         e['reg_action_parsed'] = []
         for act in e['reg_action']:
             e['reg_action_parsed'].append(fdv_actions_parsed[act])
 
-
         e['cond_parsed'] = []
         for cond in e['condition']:
             e['cond_parsed'].append(conditions_parsed[cond])
 
-        e['pkt_action_parsed']= []
+        e['pkt_action_parsed'] = []
         for actt in e['pkt_action']:
             e['pkt_action_parsed'].append(packet_actions_parsed[actt])
-    print(edges)
-
     # ---------------------------------------------------------------------------------------------------------------
 
-    # ------------------------------------- START generating the condition operation --------------------------------
+    # ------------------------------------- Generate entry for the condition table  ---------------------------------
     lst_cond = []
     for (cond, cond_par) in conditions_parsed.items():
-        lst_cond.append( (conditions_reverse[cond], cond, cond_par))
+        lst_cond.append((conditions_reverse[cond], cond, cond_par))
+    # Order conditions because order matter in the ID of the condition variable
     lst_cond.sort(key=lambda x: x[0])
     cond_table_config = copy.deepcopy(TEMPLATE_SET_DEFAULT_condition_table)
 
     for cond in lst_cond:
-        # d['cond'+str(cond[0])] = cond[2]['cond']
-        cond_table_config += str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(cond[2]['operand1']) + ' ' + str(cond[2]['operand2']) + ' '
+        cond_table_config += str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
+            cond[2]['operand1']) + ' ' + str(cond[2]['operand2']) + ' '
+    # --------------------------------------------------------------------------------------------------------------
 
-    #{pkt_action} {priority}"
-
-    print(cond_table_config)
+    # ------------------------------- Generate entries for the EFSM table ------------------------------------------
     for e in edges:
         tmp = {
-            'state_match': str(e['src'])+"&&&0xFFFF",
+            'state_match': str(e['src']) + "&&&0xFFFF",
             'c0_match': '0&&&0',
             'c1_match': '0&&&0',
             'c2_match': '0&&&0',
             'c3_match': '0&&&0',
-            'OTHER_MATCH' : '',
+            'OTHER_MATCH': '',
             'dest_state': str(e['dst']),
-            }
+        }
+
+        # Map condition on the edge with the previously generated condition variable
         for c in lst_cond:
             if c[1] in e['condition']:
                 if c[0] == 0:
@@ -234,16 +233,16 @@ def parse(json_str=None):
                 elif c[0] == 3:
                     tmp['c3_match'] = '1&&&1'
         cnt = 0
+        # Add the register action to the EFSM Table Action part, the actual action on the register is perfomed by the UpdateLogic control block
         for r_a in e['reg_action_parsed']:
-            # print(r_a)
-            tmp['operation_'+str(cnt)] = r_a['operation']
-            tmp['result_'+str(cnt)] = r_a['result']
-            tmp['op1_'+str(cnt)] = r_a['op1']
-            tmp['op2_'+str(cnt)] = r_a['op2']
-            tmp['operand1_'+str(cnt)] = r_a['operand1']
-            tmp['operand2_'+str(cnt)] = r_a['operand2']
+            tmp['operation_' + str(cnt)] = r_a['operation']
+            tmp['result_' + str(cnt)] = r_a['result']
+            tmp['op1_' + str(cnt)] = r_a['op1']
+            tmp['op2_' + str(cnt)] = r_a['op2']
+            tmp['operand1_' + str(cnt)] = r_a['operand1']
+            tmp['operand2_' + str(cnt)] = r_a['operand2']
             cnt += 1
-
+        # Fill up with empty value the unused register update actions
         for i in range(cnt, 2):
             tmp['operation_' + str(i)] = '0'
             tmp['result_' + str(i)] = '0'
@@ -252,49 +251,46 @@ def parse(json_str=None):
             tmp['operand1_' + str(i)] = '0'
             tmp['operand2_' + str(i)] = '0'
 
-
+        # Set the action to be performed on the packet, the actual action is performed in the pkt_actions table
         for p_action in e['pkt_action_parsed']:
             tmp['pkt_action'] = pkt_actions_reverse[p_action['name']]
-        tmp['priority'] = "1"
-        # print(tmp)
+
+        tmp['priority'] = DEFAULT_PRIO_EFSM  # Default priority
+
         output += TEMPLATE_SET_DEFAULT_EFSMTable.format(**tmp) + "\n"
-        print(TEMPLATE_SET_DEFAULT_EFSMTable.format(**tmp))
+    # --------------------------------------------------------------------------------------------------------------
 
-    # TEMPLATE_SET_PACKET_ACTIONS = "table_add ingress.pkt_action {action} {action_match} => {action_parameters} {priority}"
+    # --------------------------------- Set the actual packet actions in the pkt_actions table ---------------------
     for (i, pkt_a) in pkt_actions.items():
-        output += TEMPLATE_SET_PACKET_ACTIONS.format(action=pkt_a, action_match=str(hex(i))+"&&&0xFF", action_parameters='', priority='10')  + "\n"
-        print(TEMPLATE_SET_PACKET_ACTIONS.format(action=pkt_a, action_match=str(hex(i))+"&&&0xFF", action_parameters='', priority='10'))
-        # print('asd')
+        output += TEMPLATE_SET_PACKET_ACTIONS.format(action=pkt_a, action_match=str(hex(i)) + "&&&0xFF",
+                                                     action_parameters='', priority='10') + "\n"
+    # --------------------------------------------------------------------------------------------------------------
 
+    logger.debug("Generated entries:\n{}".format(output))
     return output
-        # for c in e['condition']:
-        #     print (c)
-        # TEMPLATE_SET_DEFAULT_EFSMTable.format(state_match)
-
-    # ---------------------------------------------------------------------------------------------------------------
-
-
-    # print(conditions)
-    # print(flow_variables)
-
-
-
-    # for e in edges:
-    #     tmp = e['transition'].split('|')
-    #     e['match'] = tmp[0].split(';')
-    #     e['condition'] = tmp[1].split(';')
-    #     e['reg_action'] = tmp[2].split(';')
-    #     e['pkt_action'] = tmp[3].split(';')
-    # print(edges)
-    # print(edges)
-    # print(links)
-
-
-# Flow variables: you can find them in conditions and reg_action
-
-
-    
 
 
 if __name__ == '__main__':
-    parse()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_file', help='EFSM JSON as from the web gui', type=str, required=True)
+    parser.add_argument('--output_file', help='Output file', type=str, required=True)
+    parser.add_argument('--debug', help="Activate debug output", action='store_true')
+    args = parser.parse_args()
+
+    input_file = args.input_file
+    output_file = args.output_file
+    debug = args.debug
+    if debug:
+        logging.basicConfig(level=logging.DEBUG, format="[%(asctime)s][%(levelname)s] %(name)s: %(message)s ")
+    else:
+        logging.basicConfig(level=logging.INFO, format="[%(asctime)s][%(levelname)s] %(name)s: %(message)s ")
+
+    # Load JSON
+    with open(input_file, "r") as in_f:
+        input_json = json.loads(in_f.read())
+
+    cli_commands = interpret_EFSM(json_str=input_json)
+
+    with open(output_file, "w") as out_f:
+        out_f.write(cli_commands)
+
