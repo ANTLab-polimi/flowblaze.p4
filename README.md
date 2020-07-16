@@ -1,12 +1,13 @@
 ## Requirements
 
 - `Docker`
+- `make`
 - `Python3` (to run GUI without Docker)
 
 ## Before running
 
 ```bash
-make docker_pull
+make deps
 ```
 
 ## Compile OPP examples
@@ -40,7 +41,7 @@ from [http://localhost:8000](http://localhost:8000).
 - Add PTFs for OPP examples (issue: not able to read counters from PTFs due to [p4lang/PI#376](https://github.com/p4lang/PI/issues/376))
 
 ### EFSM interpreter:
-- divide parse funcion in subfunction to ease testing
+- divide parse function in sub-function to ease testing
 - add unit testing
 
 ### GUI:

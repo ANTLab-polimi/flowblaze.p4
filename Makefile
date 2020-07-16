@@ -1,16 +1,13 @@
+include util/docker/Makefile.vars
+
 curr_dir := $(shell pwd)
-P4C_IMG := opennetworking/p4c:latest
-FLASK_IMG := "dmoro92/flask:latest"
 
-docker_build_flask:
-	cd gui/Docker && docker build -t ${FLASK_IMG} .
+deps: _docker_pull
 
-docker_push_flask:
-	docker push ${FLASK_IMG}
-
-docker_pull:
+_docker_pull:
 	docker pull ${P4C_IMG}
 	docker pull ${FLASK_IMG}
+	docker pull ${P4MN_IMG}
 
 build-rate_limiter:
 	$(info *** Compiling Rate Limiter...)
