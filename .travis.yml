@@ -13,8 +13,8 @@ jobs:
     - stage: check-build
       name: "Build Docker containers"
       script:
-        - cd /util/docker && make build_flask
-        - cd /util/docker && make build_p4mn
+        - cd ./util/docker && make build_flask
+        - cd ./util/docker && make build_p4mn
 
 stages:
   - check-build
@@ -24,6 +24,6 @@ before_deploy:
 
 deploy:
   provider: script
-  script: cd /util/docker && make push
+  script: cd ./util/docker && make push
   on:
     branch: master
