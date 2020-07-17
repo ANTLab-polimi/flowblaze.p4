@@ -1,7 +1,8 @@
-FROM ubuntu:bionic
+FROM ubuntu:18.04
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y software-properties-common \
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
 	curl \
 	help2man \
 	iperf \
@@ -12,7 +13,8 @@ RUN apt-get update && apt-get install -y software-properties-common \
     ethtool \
     arping \
     telnet \
-    tcpdump
+    tcpdump \
+    sudo
 
 RUN add-apt-repository ppa:frederic-loui/p4lang-3rd-party && \
 	add-apt-repository ppa:frederic-loui/p4lang-master-bionic-nightly && \
@@ -30,6 +32,8 @@ RUN python setup.py install
 
 # Clearing APT cache
 RUN rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONPATH=/root
 
 WORKDIR /root
 COPY bmv2.py .

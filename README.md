@@ -10,14 +10,30 @@
 make deps
 ```
 
-## Compile OPP examples
+## OPP examples
 ### Rate Limiter
 
-Run
+#### Compile rate limiter
 ```bash
 make build-rate_limiter
 ```
 Outputs are in folder `./p4build/rate_limiter`
+
+#### Run rate limiter
+Topology: `h1 <--> s1 <--> h2`
+```bash
+cd p4src/rate_limiter
+make start
+```
+to stop it run `make stop`. **N.B.: BMv2 switch is loaded without any configured pipeline.**
+
+**Open BMv2 switch CLI** (Thrift CLI): `make s1-CLI`
+
+**Open host h1 or h2 shell**: `make [h1-h2]-CLI`
+
+**Attach mininet shell**: `make attach-mininet`.
+To exit (detach mininet shell) use `CTRL+P` follower by `CTRL+Q`.
+
 
 ## Run GUI
 Run with Docker container:
