@@ -13,8 +13,9 @@ jobs:
     - stage: check-build
       name: "Build Docker containers"
       script:
-        - cd ./util/docker && make build_flask
-        - cd ./util/docker && make build_p4mn
+        - cd ./util/docker
+        - make build_flask
+        - make build_p4mn
 
 stages:
   - check-build
