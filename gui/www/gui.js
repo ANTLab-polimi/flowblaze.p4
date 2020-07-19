@@ -106,8 +106,8 @@ function addMatch(){
     var actionList = document.getElementById("actionList");
     var actionText = action.options[action.selectedIndex].text;
     var input = document.createElement("label");
-    input.value = document.getElementById("action").value; // + "(" + document.getElementById("actionParam").value + ")";
-    input.innerHTML = document.getElementById("action").value; // + "(" + document.getElementById("actionParam").value + ")";
+    input.value = document.getElementById("action").value + "(" + document.getElementById("actionParam").value + ")";
+    input.innerHTML = document.getElementById("action").value + "(" + document.getElementById("actionParam").value + ")";
     input.className = "actionDiv";
     actionList.appendChild(input);
     // clear update
