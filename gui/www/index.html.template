@@ -66,6 +66,7 @@
         <div style="display: table-row; margin: 8px;padding: 3px;">
           <div style="display: table-cell;" id="matchesList"> </div>
           <div style="display: table-cell;" id="conditionsList"> </div>
+          &rarr;
           <div style="display: table-cell;" id="updateList"> </div>
           <div style="display: table-cell;" id="actionList"> </div>
         </div>

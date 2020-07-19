@@ -14,17 +14,18 @@ function addMatch(){
     var match = document.getElementById("matchesList");
     var matchField = document.getElementById("matchField");
     var matchFieldText = matchField.options[matchField.selectedIndex].text;
+    var matchValueText = document.getElementById("matchValue").value.trim();
     if (matchField.selectedIndex == 0) {
       alert("Please select a match field!")
       return;
     }
-    if (document.getElementById("matchValue").value == "") {
-      alert("Please specify a match value!")
+    if (matchValueText.length == 0) {
+      alert("Please specify a non-empty match value!")
       return;
     }
     var input = document.createElement("label");
-    input.value = matchFieldText + "==" + document.getElementById("matchValue").value;
-    input.innerHTML = matchFieldText + "==" + document.getElementById("matchValue").value;
+    input.value = matchFieldText + " == " + matchValueText;
+    input.innerHTML = matchFieldText + " == " + matchValueText;
     input.className = "matchDiv";
     match.appendChild(input);
     // clear match
@@ -36,23 +37,25 @@ function addMatch(){
 
   function addCondition(){
     var conditionOperator = document.getElementById("condOperator");
+    var condOperand1Text = document.getElementById("condOperand1").value.trim();
+    var condOperand2Text = document.getElementById("condOperand2").value.trim();
     if (conditionOperator.selectedIndex == 0) {
       alert("Please select an operator!")
       return;
     }
-    if (document.getElementById("condOperand1").value == "") {
-      alert("Please insert operand 1!")
+    if (condOperand1Text.length == 0) {
+      alert("Please insert a non-empty operand 1!")
       return;
     }
-    if (document.getElementById("condOperand2").value == "") {
-      alert("Please insert operand 2!")
+    if (condOperand2Text.length == 0) {
+      alert("Please insert a non-empty operand 2!")
       return;
     }
     var condition = document.getElementById("conditionsList");
     var conditionOperatorText = conditionOperator.options[conditionOperator.selectedIndex].text;
     var input = document.createElement("label");
-    input.value = document.getElementById("condOperand1").value + conditionOperatorText + document.getElementById("condOperand2").value;
-    input.innerHTML = escapeHtml(document.getElementById("condOperand1").value + conditionOperatorText + document.getElementById("condOperand2").value);
+    input.value = condOperand1Text + " " + conditionOperatorText + " " + condOperand2Text;
+    input.innerHTML = escapeHtml(condOperand1Text + " " + conditionOperatorText + " " + condOperand2Text);
     input.className = "conditionDiv";
     condition.appendChild(input);
     // clear condition
@@ -65,27 +68,36 @@ function addMatch(){
 
   function addUpdate(){
     var updateOperation = document.getElementById("updateOperation");
-    if (updateOperation.selectedIndex == 0) {
-      alert("Please select an operator!"); //TODO potremmo ammetere vuoto solo se operando 2 è vuoto!
+    var updateOutputText = document.getElementById("updateOutput").value.trim();
+    var updateOperand1Text = document.getElementById("updateOperand1").value.trim();
+    var updateOperand2Text = document.getElementById("updateOperand2").value.trim();
+    if (updateOperation.selectedIndex == 0 && updateOperand2Text.length > 0) {
+      alert("Please select an operator!");
       return;
     }
     if (document.getElementById("updateOutput").value == "") {
-      alert("Please insert output!")
+      alert("Please insert a non-empty output!")
       return;
     }
-    if (document.getElementById("updateOperand1").value == "") {
-      alert("Please insert operand 1!")
+    if (updateOperand1Text.length == 0) {
+      alert("Please insert a non-empty operand 1!")
       return;
     }
-    if (document.getElementById("updateOperand2").value == "") {
-      alert("Please insert operand 2!")
+    if (updateOperand2Text.length == 0 && updateOperation.selectedIndex > 0) {
+      alert("Please insert a non-empty operand 2!")
       return;
     }
     var condition = document.getElementById("updateList");
     var updateOperationText = updateOperation.options[updateOperation.selectedIndex].text;
     var input = document.createElement("label");
-    input.value = document.getElementById("updateOutput").value + "=" + document.getElementById("updateOperand1").value + updateOperationText + document.getElementById("updateOperand2").value;
-    input.innerHTML = document.getElementById("updateOutput").value + "=" + document.getElementById("updateOperand1").value + updateOperationText + document.getElementById("updateOperand2").value;
+    if (updateOperation.selectedIndex == 0) {
+      input.value = document.getElementById("updateOutput").value + " = " + updateOperand1Text;
+      input.innerHTML = document.getElementById("updateOutput").value + " = " + updateOperand1Text;
+    } else {
+      input.value = document.getElementById("updateOutput").value + " = " + updateOperand1Text + " " + updateOperationText + " " + updateOperand2Text;
+      input.innerHTML = document.getElementById("updateOutput").value + " = " + updateOperand1Text + " " + updateOperationText + " " + updateOperand2Text;
+    }
+
     input.className = "updateDiv";
     condition.appendChild(input);
     // clear update
@@ -105,9 +117,27 @@ function addMatch(){
     }
     var actionList = document.getElementById("actionList");
     var actionText = action.options[action.selectedIndex].text;
+    var actionParamText = document.getElementById("actionParam").value.trim();
+    var actionParamTextNum = actionParamText.split(',').length;
+
+    var actionParamStr = actionText.match(/.*\((.*)\)/)[1];
+    var actionParamNum = actionParamStr.split(',').length;
+    if (actionParamStr.length == 0 && actionParamText.length > 0) {
+      alert("The selected action do not expect any parameter!");
+      return;
+    }
+    if (actionParamStr.length > 0 && actionParamNum == 1 && (actionParamText.length == 0 || actionParamTextNum > 1)) {
+      alert("The selected action expects one parameter!");
+      return;
+    }
+    if (actionParamStr.length > 0 && actionParamTextNum != actionParamNum) {
+      alert("The selected action expects " + actionParamNum + " comma separated parameters!");
+      return;
+    }
+
     var input = document.createElement("label");
-    input.value = document.getElementById("action").value + "(" + document.getElementById("actionParam").value + ")";
-    input.innerHTML = document.getElementById("action").value + "(" + document.getElementById("actionParam").value + ")";
+    input.value = document.getElementById("action").value + "(" + actionParamText + ")";
+    input.innerHTML = document.getElementById("action").value + "(" + actionParamText + ")";
     input.className = "actionDiv";
     actionList.appendChild(input);
     // clear update
@@ -124,37 +154,37 @@ function addMatch(){
     for (var i = 0; i < children.length; i++) {
       out.value += children[i].value;
       if (i < children.length - 1){
-        out.value += ";";
+        out.value += " ; ";
       }
     }
 
-    out.value += "|";
+    out.value += " | ";
 
     children = document.getElementById("conditionsList").children;
     for (var i = 0; i < children.length; i++) {
       out.value += children[i].value;
       if (i < children.length - 1){
-        out.value += ";";
+        out.value += " ; ";
       }
     }
 
-    out.value += "|";
+    out.value += " | ";
     
     children = document.getElementById("updateList").children;
     for (var i = 0; i < children.length; i++) {
       out.value += children[i].value;
       if (i < children.length - 1){
-        out.value += ";";
+        out.value += " ; ";
       }
     }
 
-    out.value += "|";
+    out.value += " | ";
     
     children = document.getElementById("actionList").children;
     for (var i = 0; i < children.length; i++) {
       out.value += children[i].value;
       if (i < children.length - 1){
-        out.value += ";";
+        out.value += " ; ";
       }
     }
   }

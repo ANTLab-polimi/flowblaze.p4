@@ -8,6 +8,8 @@
 <div style="background-color:rgba(255, 0, 0, 0.2); width:60%">
 <select id="matchField">
   <option value="matchField">matchField</option>
+  <option value="hdr.ipv4.srcAddr">hdr.ipv4.srcAddr</option>
+  <option value="hdr.ipv4.dstAddr">hdr.ipv4.dstAddr</option>
   <!-- <option value="ip">ip</option>
   <option value="eth">eth</option>
   <option value="port">port</option> -->
@@ -50,10 +52,13 @@
 
 <div style="background-color:rgba(0, 255, 0, 0.2); width:60%">
 <select id="action">
-  <option value=""></option>
-  <option value="forward">forward</option>
+  <option value="action">action</option>
+  <option value="forward">forward(port)</option>
+  <option value="_drop">_drop()</option>
+  <option value="NoAction">NoAction()</option>
+  <!-- <option value="forward">forward</option>
   <option value="_drop">_drop</option>
-  <option value="NoAction">NoAction</option>
+  <option value="NoAction">NoAction</option> --->
 </select>
 <input type="text" value="" id="actionParam">
 <a href="#" id="setAction" onclick="setAction()">SET ACTION</a>
@@ -66,6 +71,7 @@
         <div style="display: table-row; margin: 8px;padding: 3px;">
           <div style="display: table-cell;" id="matchesList"> </div>
           <div style="display: table-cell;" id="conditionsList"> </div>
+          &rarr;
           <div style="display: table-cell;" id="updateList"> </div>
           <div style="display: table-cell;" id="actionList"> </div>
         </div>

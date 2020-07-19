@@ -52,7 +52,7 @@ def interpret_EFSM(json_str):
         else:
             logger.warning("Other link:" + str(link))
             continue
-        tmp = link['text'].split('|')
+        tmp = link['text'].replace(' ', '').split('|')
 
         e['match'] = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
 
