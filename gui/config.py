@@ -66,6 +66,4 @@ TEMPLATE_SET_DEFAULT_condition_table = "table_set_default ingress.oppLoop.condit
 TEMPLATE_SET_DEFAULT_EFSMTable = "table_add ingress.oppLoop.EFSM_table define_operation_update_state {state_match} {c0_match} {c1_match} {c2_match} {c3_match} {OTHER_MATCH} => {dest_state} {operation_0} {result_0} {op1_0} {op2_0} {operand1_0} {operand2_0} {operation_1} {result_1} {op1_1} {op2_1} {operand1_1} {operand2_1} {pkt_action} {priority}"
 TEMPLATE_SET_PACKET_ACTIONS = "table_add ingress.pkt_action {action} {action_match} => {action_parameters} {priority}"
 
-lookup_fields = ['hdr.ipv4.srcAddr', 'hdr.ipv4.dstAddr', 'hdr.tcp.srcPort', 'hdr.tcp.dstPort']
-
 POSSIBLE_PACKET_ACTION = ['_drop', 'forward']

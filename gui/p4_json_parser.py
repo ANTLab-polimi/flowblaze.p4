@@ -9,6 +9,7 @@ def parse_p4(p4_src_file):
 
 	HEADER_FIELD_EXTRACTOR_REGEX = r'#define[ ]+METADATA_OPERATION_COND[ ]+(\(.*\)[ ]*|)(.*)'
 	EFSM_MATCH_FIELDS_REGEX = r'#define[ ]+EFSM_MATCH_FIELDS[ ]+(.*)'
+	FLOW_HASH_FIELDS_REGEX = r'#define[ ]+LOOKUP_HASH_FIELDS[ ]+{(.*)}'
 
 	EFSM_CONDITIONS_FIELD_str = list(filter(lambda x: 'METADATA_OPERATION_COND' in x, l))
 	if len(EFSM_CONDITIONS_FIELD_str) > 0:
@@ -39,7 +40,21 @@ def parse_p4(p4_src_file):
 		# missing EFSM_MATCH_FIELDS macro
 		EFSM_MATCH_FIELDS = None
 
-	return EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS
+	FLOW_HASH_FIELDS_REGEX_str = list(filter(lambda x: 'LOOKUP_HASH_FIELDS' in x, l))
+	if len(FLOW_HASH_FIELDS_REGEX_str) > 0:
+		FLOW_HASH_FIELDS_REGEX_str = FLOW_HASH_FIELDS_REGEX_str[0].strip()
+		m = re.search(FLOW_HASH_FIELDS_REGEX, FLOW_HASH_FIELDS_REGEX_str)
+		if m:
+			FLOW_HASH_FIELDS_REGEX_str = m.group(1)
+			EFSM_LOOKUP_FIELDS = list(map(lambda x: x.strip(), FLOW_HASH_FIELDS_REGEX_str.split(',')))
+		else:
+			# empty LOOKUP_HASH_FIELDS macro
+			EFSM_LOOKUP_FIELDS = None
+	else:
+		# missing LOOKUP_HASH_FIELDS macro
+		EFSM_LOOKUP_FIELDS = None
+
+	return EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS
 
 def parse_json(json_file):
 	with open(json_file) as f:
@@ -89,21 +104,9 @@ def parse_json(json_file):
 
 	return GUI_match_fields, GUI_actions, GUI_actions_parameters
 
-if __name__ == "__main__":
-	assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
-
-	# TODO keeping both EFSM_MATCH_FIELDS and GUI_match_fields is redundant...
-	EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS = parse_p4(sys.argv[1])
-	GUI_match_fields, GUI_actions, GUI_actions_parameters = parse_json(sys.argv[2])
-
-	print('EFSM_CONDITIONS_FIELD:', EFSM_CONDITIONS_FIELD)
-	print('EFSM_MATCH_FIELDS:', EFSM_MATCH_FIELDS)
-	print()
-	print('GUI_match_fields:', GUI_match_fields)
-	print('GUI_actions:', GUI_actions)
-	print('GUI_actions_parameters:', GUI_actions_parameters)	
-
-	with open('./www/index.html.template', 'r') as f:
+def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src='./www/index.html.template', dst='./www/index.html'):
+	with open(src, 'r') as f:
+		print('Reading %s...' % src)
 		html = f.readlines()
 
 	idx = html.index('  <option value="matchField">matchField</option>\n')
@@ -115,7 +118,44 @@ if __name__ == "__main__":
 		action_str = '%s(%s)' % (action, ''.join(GUI_actions_parameters[action]))
 		html.insert(idx + 1, '  <option value="%s">%s</option>\n' % (action, action_str))
 
-	with open('./www/index.html', 'w') as f:
+	with open(dst, 'w') as f:
+		print('Patching %s...' % dst)
 		f.writelines(html)
+
+def patch_config_py(GUI_actions, src='./config.py', dst='./config.py'):
+	with open(src, 'r') as f:
+		print('Reading %s...' % src)
+		py = f.readlines()
+
+	idx = [ i for i, line in enumerate(py) if 'POSSIBLE_PACKET_ACTION' in line ]
+	if len(idx) > 0:
+		idx = idx[0]
+		del py[idx]
+		py.insert(idx, 'POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
+	else:
+		print('Cannot find POSSIBLE_PACKET_ACTION in \'%s\'. Patching at the end of the file...' % src)
+		py.append('POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
+
+	with open(dst, 'w') as f:
+		print('Patching %s...' % dst)
+		f.writelines(py)
+
+if __name__ == "__main__":
+	assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
+
+	# TODO keeping both EFSM_MATCH_FIELDS and GUI_match_fields is redundant...
+	EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS = parse_p4(sys.argv[1])
+	GUI_match_fields, GUI_actions, GUI_actions_parameters = parse_json(sys.argv[2])
+
+	print('EFSM_CONDITIONS_FIELD:', EFSM_CONDITIONS_FIELD)
+	print('EFSM_MATCH_FIELDS:', EFSM_MATCH_FIELDS)
+	print('EFSM_LOOKUP_FIELDS:', EFSM_LOOKUP_FIELDS)
+	print()
+	print('GUI_match_fields:', GUI_match_fields)
+	print('GUI_actions:', GUI_actions)
+	print('GUI_actions_parameters:', GUI_actions_parameters)
+
+	patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters)
+	patch_config_py(GUI_actions)
 
 # davide@davide-PC:~/opp.p4/gui$ python3 p4_json_parser.py ../p4src/rate_limiter/rate_limiter.p4 ../p4build/rate_limiter/bmv2.json
