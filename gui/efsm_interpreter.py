@@ -33,9 +33,6 @@ def interpret_EFSM(json_str):
     nodes = json_str['nodes']
     links = json_str['links']
 
-    states = []
-    for n in nodes:
-        states.append(n['text'])
     edges = []
     flow_variables = set()
     conditions = set()
@@ -44,15 +41,17 @@ def interpret_EFSM(json_str):
 
     # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
     for link in links:
+        link['text'] = link['text'].replace(' ', '')
+
         if link['type'] == 'Link':
-            e = {'src': states[int(link['nodeA'])], 'dst': states[int(link['nodeB'])], 'transition': link['text']}
+            e = {'src': link['nodeA'], 'dst': link['nodeB'], 'transition': link['text']}
 
         elif link['type'] == 'SelfLink':
             e = {'src': link['node'], 'dst': link['node'], 'transition': link['text']}
         else:
             logger.warning("Other link:" + str(link))
             continue
-        tmp = link['text'].replace(' ', '').split('|')
+        tmp = link['text'].split('|')
 
         e['match'] = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
 
@@ -74,6 +73,12 @@ def interpret_EFSM(json_str):
         for pa in e['pkt_action']:
             if len(pa) > 0:
                 pkt_actions.add(pa)
+        if e['reg_action'] == [] and e['pkt_action'] == []:
+            if link['type'] == 'Link':
+                logger.warning("Skipping ({})->({}) transition '{}': at least one action is required".format(e['src'], e['dst'], e['transition']))
+            else:
+                logger.warning("Skipping self-transition in state ({}) '{}': at least one action is required".format(e['src'], e['transition']))
+            continue
         edges.append(e)
 
     # Now Flow Variable will contain a dict with ID and the name of the variables
@@ -94,6 +99,7 @@ def interpret_EFSM(json_str):
 
     conditions_parsed = {}
     # ------------------------------ CONDITIONS -----------------------------------------------------------------
+    # TODO can we understand that "pkt >= 10" and "pkt < 10" are the same condition?
     # Interpret the conditions, maximum
     for (i, c) in conditions.items():
         tmp_cond = copy.deepcopy(TEMPLATE_CONDITION)
@@ -176,7 +182,7 @@ def interpret_EFSM(json_str):
         tmp_pkt_action = copy.deepcopy(TEMPLATE_PACKET_ACTION)
         for pa in POSSIBLE_PACKET_ACTION:
             if pa in pkt_a:
-                tmp_pkt_action['name'] = pa
+                tmp_pkt_action['name'] = pa.split('(')[0]
                 tmp_pkt_action['parameters'] = pkt_a.replace(pa, '').replace('(', '').replace(')', '').split(',')
                 break
         packet_actions_parsed[pkt_a] = tmp_pkt_action
@@ -254,8 +260,8 @@ def interpret_EFSM(json_str):
             tmp['operand2_' + str(i)] = '0'
 
         # Set the action to be performed on the packet, the actual action is performed in the pkt_actions table
-        for p_action in e['pkt_action_parsed']:
-            tmp['pkt_action'] = pkt_actions_reverse[p_action['name']]
+        for p_action in e['pkt_action']:
+            tmp['pkt_action'] = pkt_actions_reverse[p_action]
 
         tmp['priority'] = DEFAULT_PRIO_EFSM  # Default priority
 
@@ -264,8 +270,10 @@ def interpret_EFSM(json_str):
 
     # --------------------------------- Set the actual packet actions in the pkt_actions table ---------------------
     for (i, pkt_a) in pkt_actions.items():
-        output += TEMPLATE_SET_PACKET_ACTIONS.format(action=pkt_a, action_match=str(hex(i)) + "&&&0xFF",
-                                                     action_parameters='', priority='10') + "\n"
+        action = packet_actions_parsed[pkt_a]['name']
+        action_parameters = ' '.join(packet_actions_parsed[pkt_a]['parameters'])
+        output += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i)) + "&&&0xFF",
+                                                     action_parameters=action_parameters, priority='10') + "\n"
     # --------------------------------------------------------------------------------------------------------------
 
     logger.debug("Generated entries:\n{}".format(output))
