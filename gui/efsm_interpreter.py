@@ -63,6 +63,8 @@ def interpret_EFSM(json_str):
                 conditions.add(cond)
 
         e['reg_action'] = list(filter(lambda x: len(x) > 0, tmp[2].split(';')))
+        # turns "x=y" update actions into "x=y+0"
+        e['reg_action'] = list(map(lambda x: x + '+0' if all(op not in x for op in OPERATIONS.keys() if op is not 'NOP') else x, e['reg_action']))
         for ra in e['reg_action']:
             if len(ra) > 0:
                 reg_actions.add(ra)
