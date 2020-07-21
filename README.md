@@ -1,8 +1,8 @@
 ## Requirements
 
-- `Docker`
+- `docker`
 - `make`
-- `Python3` (to run GUI without Docker)
+- `python3` (to run GUI without Docker)
 
 ## Before running
 
@@ -32,7 +32,7 @@ to stop it run `make stop`. **N.B.: BMv2 switch is loaded without any configured
 **Open host h1 or h2 shell**: `make [h1-h2]-CLI`
 
 **Attach mininet shell**: `make attach-mininet`.
-To exit (detach mininet shell) use `CTRL+P` follower by `CTRL+Q`.
+To exit (detach mininet shell) use `CTRL+P` followed by `CTRL+Q`.
 
 
 ## Run GUI
@@ -47,7 +47,7 @@ make stop_gui_docker
 ```
 
 ### Run GUI without Docker
-Install the needed requirements from `gui/requirements.txt`, then run `make start_gui_local`, the GUI is then accessible 
+Install the needed requirements from `util/docker/flask/requirements.txt`, then run `make start_gui_local`, the GUI is then accessible 
 from [http://localhost:8000](http://localhost:8000).
 
 ## TODOs
@@ -61,6 +61,5 @@ from [http://localhost:8000](http://localhost:8000).
 - add unit testing
 
 ### GUI:
-- Parse P4 or JSON for BMv2 to extract parser information to compile drop-down matchFields menu and possible actions
-- find a way to deal with actions parameters in state change actions
-- push geneated rules directly on a switch
+- push generated rules directly on a switch
+- use html template (es. Jinja2) https://flask.palletsprojects.com/en/1.1.x/quickstart/#rendering-templates
