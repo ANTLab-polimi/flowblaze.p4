@@ -1,67 +1,82 @@
 <head>
 <link rel="stylesheet" type="text/css" href="gui.css">
 <link rel="stylesheet" type="text/css" href="fsm.css">
+<link rel="stylesheet" href="balloon.min.css">
 <script src="gui.js"></script>
 <script src="fsm.js"></script>
 </head>
 <body>
 <div style="background-color:rgba(255, 0, 0, 0.2); width:60%">
-<select id="matchField">
-  <option value="matchField">matchField</option>
-  <option value="hdr.ipv4.srcAddr">hdr.ipv4.srcAddr</option>
-  <option value="hdr.ipv4.dstAddr">hdr.ipv4.dstAddr</option>
-  <!-- <option value="ip">ip</option>
-  <option value="eth">eth</option>
-  <option value="port">port</option> -->
-</select>
-==
-<input type="text" value="" id="matchValue">
-<a href="#" id="addMatch" onclick="addMatch()">ADD MATCH</a>
+  <select id="matchField">
+    <option value="matchField">matchField</option>
+    <option value="hdr.ipv4.srcAddr">hdr.ipv4.srcAddr</option>
+    <option value="hdr.ipv4.dstAddr">hdr.ipv4.dstAddr</option>
+    <!-- <option value="ip">ip</option>
+    <option value="eth">eth</option>
+    <option value="port">port</option> -->
+  </select>
+  ==
+  <div class="balloon-wrapper" aria-label="TODO" data-balloon-pos="down-left">
+    <input type="text" value="" id="matchValue">
+  </div>
+  <a href="#" id="addMatch" onclick="addMatch()">ADD MATCH</a>
 </div>
 
 <div style="background-color:rgba(0, 0, 255, 0.2); width:60%">
-<input type="text" value="" id="condOperand1">
-<select id="condOperator">
-  <option value=""></option>
-  <option value=">">></option>
-  <option value=">=">>=</option>
-  <option value="<"><</option>
-  <option value="<="><=</option>
-  <option value="==">==</option>
-  <option value="!=">!=</option>
-</select>
-<input type="text" value="" id="condOperand2">
-<a href="#" id="addCondition" onclick="addCondition()">ADD CONDITION</a>
+  <div class="balloon-wrapper" aria-label="Supported condition values: flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
+    <input type="text" value="" id="condOperand1">
+  </div>
+  <select id="condOperator">
+    <option value=""></option>
+    <option value=">">></option>
+    <option value=">=">>=</option>
+    <option value="<"><</option>
+    <option value="<="><=</option>
+    <option value="==">==</option>
+    <option value="!=">!=</option>
+  </select>
+  <div class="balloon-wrapper" aria-label="Supported condition values: flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
+    <input type="text" value="" id="condOperand2">
+  </div>
+  <a href="#" id="addCondition" onclick="addCondition()">ADD CONDITION</a>
 </div>
 
 <div style="background-color:rgba(0, 255, 255, 0.2); width:60%">
-<input type="text" value="" id="updateOutput">
-=
-<input type="text" value="" id="updateOperand1">
-<select id="updateOperation">
-  <option value=""></option>
-  <option value="+">+</option>
-  <option value="-">-</option>
-  <option value=">>">>></option>
-  <option value="<<"><<</option>
-  <option value="*">*</option>
-</select>
-<input type="text" value="" id="updateOperand2">
-<a href="#" id="addUpdate" onclick="addUpdate()">ADD UPDATE</a>
+  <div class="balloon-wrapper" aria-label="Supported output values: flow_var, #global_var" data-balloon-pos="down-left">
+    <input type="text" value="" id="updateOutput">
+  </div>
+  =
+  <div class="balloon-wrapper" aria-label="Supported operand values: flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
+    <input type="text" value="" id="updateOperand1">
+  </div>
+  <select id="updateOperation">
+    <option value=""></option>
+    <option value="+">+</option>
+    <option value="-">-</option>
+    <option value=">>">>></option>
+    <option value="<<"><<</option>
+    <option value="*">*</option>
+  </select>
+  <div class="balloon-wrapper" aria-label="Supported operand values (optional): flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
+    <input type="text" value="" id="updateOperand2">
+  </div>
+  <a href="#" id="addUpdate" onclick="addUpdate()">ADD UPDATE</a>
 </div>
 
 <div style="background-color:rgba(0, 255, 0, 0.2); width:60%">
-<select id="action">
-  <option value="action">action</option>
-  <option value="forward">forward(port)</option>
-  <option value="_drop">_drop()</option>
-  <option value="NoAction">NoAction()</option>
-  <!-- <option value="forward">forward</option>
-  <option value="_drop">_drop</option>
-  <option value="NoAction">NoAction</option> --->
-</select>
-<input type="text" value="" id="actionParam">
-<a href="#" id="setAction" onclick="setAction()">SET ACTION</a>
+  <select id="action">
+    <option value="action">action</option>
+    <option value="forward">forward(port)</option>
+    <option value="_drop">_drop()</option>
+    <option value="NoAction">NoAction()</option>
+    <!-- <option value="forward">forward</option>
+    <option value="_drop">_drop</option>
+    <option value="NoAction">NoAction</option> --->
+  </select>
+  <div class="balloon-wrapper" aria-label="Comma separated action parameters" data-balloon-pos="down-left">
+    <input type="text" value="" id="actionParam">
+  </div>
+  <a href="#" id="setAction" onclick="setAction()">SET ACTION</a>
 </div>
 
 <div style="display: table;background-color:rgb(255,255,255);">
