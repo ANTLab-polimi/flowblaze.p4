@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+import logging
 
 def parse_p4(p4_src_file):
     with open(p4_src_file) as f:
@@ -106,7 +107,7 @@ def parse_json(json_file):
 
 def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src='./www/index.html.template'):
     with open(src, 'r') as f:
-        print('Reading %s...' % src)
+        logging.info('Reading %s...' % src)
         html = f.readlines()
     idx = [i for i, line in enumerate(html) if '<option value="matchField">' in line]
     if len(idx) > 0:
@@ -114,7 +115,8 @@ def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src=
         for match_field in GUI_match_fields[::-1]:
             html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (match_field, match_field))
     else:
-        print('Cannot find \'<option value="matchField">\' in %s' % src)
+        logging.error('Cannot find \'<option value="matchField">\' in %s' % src)
+        return None
 
     idx = [i for i, line in enumerate(html) if '<option value="action">action</option>' in line]
     if len(idx) > 0:
@@ -123,13 +125,14 @@ def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src=
             action_str = '%s(%s)' % (action, ''.join(GUI_actions_parameters[action]))
             html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (action, action_str))
     else:
-        print('Cannot find \'<option value="action">action</option>\' in %s' % src)
+        logging.error('Cannot find \'<option value="action">action</option>\' in %s' % src)
+        return None
     return "".join(html)
 
 
 def patch_config_py(GUI_actions, src='./config.py', dst='./config.py'):
     with open(src, 'r') as f:
-        print('Reading %s...' % src)
+        logging.info('Reading %s...' % src)
         py = f.readlines()
 
     idx = [i for i, line in enumerate(py) if 'POSSIBLE_PACKET_ACTION' in line]
@@ -138,11 +141,11 @@ def patch_config_py(GUI_actions, src='./config.py', dst='./config.py'):
         del py[idx]
         py.insert(idx, 'POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
     else:
-        print('Cannot find POSSIBLE_PACKET_ACTION in \'%s\'. Patching at the end of the file...' % src)
+        logging.warning('Cannot find POSSIBLE_PACKET_ACTION in \'%s\'. Patching at the end of the file...' % src)
         py.append('POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
 
     with open(dst, 'w') as f:
-        print('Patching %s...' % dst)
+        logging.info('Patching %s...' % dst)
         f.writelines(py)
 
 
@@ -151,13 +154,13 @@ def parse_files(p4_file, json_file):
     EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS = parse_p4(p4_file)
     GUI_match_fields, GUI_actions, GUI_actions_parameters = parse_json(json_file)
 
-    print('EFSM_CONDITIONS_FIELD:', EFSM_CONDITIONS_FIELD)
-    print('EFSM_MATCH_FIELDS:', EFSM_MATCH_FIELDS)
-    print('EFSM_LOOKUP_FIELDS:', EFSM_LOOKUP_FIELDS)
-    print()
-    print('GUI_match_fields:', GUI_match_fields)
-    print('GUI_actions:', GUI_actions)
-    print('GUI_actions_parameters:', GUI_actions_parameters)
+    logging.info('EFSM_CONDITIONS_FIELD: %s' % EFSM_CONDITIONS_FIELD)
+    logging.info('EFSM_MATCH_FIELDS: %s' % EFSM_MATCH_FIELDS)
+    logging.info('EFSM_LOOKUP_FIELDS: %s' % EFSM_LOOKUP_FIELDS)
+    logging.info('')
+    logging.info('GUI_match_fields: %s' % GUI_match_fields)
+    logging.info('GUI_actions: %s' % GUI_actions)
+    logging.info('GUI_actions_parameters: %s' % GUI_actions_parameters)
 
     index_h = patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters)
     return index_h, GUI_actions
@@ -165,6 +168,8 @@ def parse_files(p4_file, json_file):
 
 if __name__ == "__main__":
     current_index = './www/index.html'
+    logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s][%(levelname)s] %(name)s: %(message)s ')
+
     assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
 
     index_html, GUI_actions = parse_files(sys.argv[1], sys.argv[2])
@@ -172,5 +177,5 @@ if __name__ == "__main__":
     # Patching files
     patch_config_py(GUI_actions)
     with open(current_index, 'w') as f:
-        print('Patching %s...' % current_index)
+        logging.info('Patching %s...' % current_index)
         f.writelines(index_html)
