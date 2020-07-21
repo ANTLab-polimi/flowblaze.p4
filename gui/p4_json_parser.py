@@ -109,14 +109,22 @@ def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src=
 		print('Reading %s...' % src)
 		html = f.readlines()
 
-	idx = html.index('  <option value="matchField">matchField</option>\n')
-	for match_field in GUI_match_fields[::-1]:
-		html.insert(idx + 1, '  <option value="%s">%s</option>\n' % (match_field, match_field))
+	idx = [ i for i, line in enumerate(html) if '<option value="matchField">' in line ]
+	if len(idx) > 0:
+		idx = idx[0]
+		for match_field in GUI_match_fields[::-1]:
+			html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (match_field, match_field))
+	else:
+		print('Cannot find \'<option value="matchField">\'...' % dst)
 
-	idx = html.index('  <option value="action">action</option>\n')
-	for action in GUI_actions[::-1]:
-		action_str = '%s(%s)' % (action, ''.join(GUI_actions_parameters[action]))
-		html.insert(idx + 1, '  <option value="%s">%s</option>\n' % (action, action_str))
+	idx = [ i for i, line in enumerate(html) if '<option value="action">action</option>' in line ]
+	if len(idx) > 0:
+		idx = idx[0]
+		for action in GUI_actions[::-1]:
+			action_str = '%s(%s)' % (action, ''.join(GUI_actions_parameters[action]))
+			html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (action, action_str))
+	else:
+		print('Cannot find \'<option value="action">action</option>\'...' % dst)
 
 	with open(dst, 'w') as f:
 		print('Patching %s...' % dst)
