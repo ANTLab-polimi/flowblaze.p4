@@ -7,17 +7,13 @@ from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, POSSIB
     TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, \
     TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL
 
-FILE_CONFIG = "examples/rate_limiter.json"
-
-
 logger = logging.getLogger(__name__)
 
 
 # REMEMBER: CONDITIONS MUST BE ORDERED!!!!!!
 
 # TODO:
-#  - add argparse in main to parse input file and output file to ease test
-#  - divide parse funcion in subfunction to ease testing
+#  - divide parse function in subfunction to ease testing
 #  - add unit testing
 #  - add PTF/testvector output
 # Edges information:
@@ -27,7 +23,9 @@ logger = logging.getLogger(__name__)
 #  - Actions
 # --> MATCHES|CONDITIONS|REG_UPDATE|ACTIONS
 # ipv4.srcAddr==10.0.0.1;ipv4.srcAddr==10.0.0.1;|cnt<=5;|cnt=cnt+1|fwd(6)
-def interpret_EFSM(json_str):
+
+
+def interpret_EFSM(json_str, packet_actions):
     output = ""
 
     nodes = json_str['nodes']
@@ -63,7 +61,9 @@ def interpret_EFSM(json_str):
 
         e['reg_action'] = list(filter(lambda x: len(x) > 0, tmp[2].split(';')))
         # turns "x=y" update actions into "x=y+0"
-        e['reg_action'] = list(map(lambda x: x + '+0' if all(op not in x for op in OPERATIONS.keys() if op is not 'NOP') else x, e['reg_action']))
+        e['reg_action'] = list(
+            map(lambda x: x + '+0' if all(op not in x for op in OPERATIONS.keys() if op is not 'NOP') else x,
+                e['reg_action']))
         for ra in e['reg_action']:
             if len(ra) > 0:
                 reg_actions.add(ra)
@@ -75,9 +75,13 @@ def interpret_EFSM(json_str):
                 pkt_actions.add(pa)
         if e['reg_action'] == [] and e['pkt_action'] == []:
             if link['type'] == 'Link':
-                logger.warning("Skipping ({})->({}) transition '{}': at least one action is required".format(e['src'], e['dst'], e['transition']))
+                logger.warning(
+                    "Skipping ({})->({}) transition '{}': at least one action is required".format(e['src'], e['dst'],
+                                                                                                  e['transition']))
             else:
-                logger.warning("Skipping self-transition in state ({}) '{}': at least one action is required".format(e['src'], e['transition']))
+                logger.warning(
+                    "Skipping self-transition in state ({}) '{}': at least one action is required".format(e['src'], e[
+                        'transition']))
             continue
         edges.append(e)
 
@@ -180,7 +184,7 @@ def interpret_EFSM(json_str):
     packet_actions_parsed = {}
     for (i, pkt_a) in pkt_actions.items():
         tmp_pkt_action = copy.deepcopy(TEMPLATE_PACKET_ACTION)
-        for pa in POSSIBLE_PACKET_ACTION:
+        for pa in packet_actions:
             if pa in pkt_a:
                 tmp_pkt_action['name'] = pa.split('(')[0]
                 tmp_pkt_action['parameters'] = pkt_a.replace(pa, '').replace('(', '').replace(')', '').split(',')
@@ -279,7 +283,7 @@ def interpret_EFSM(json_str):
     logger.debug("Generated entries:\n{}".format(output))
     return output
 
-
+# TODO: parse P4 and JSON files to retrieve the packet actions instead of using the hardcoded one in config.py
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', help='EFSM JSON as from the web gui', type=str, required=True)
@@ -299,8 +303,7 @@ if __name__ == '__main__':
     with open(input_file, "r") as in_f:
         input_json = json.loads(in_f.read())
 
-    cli_commands = interpret_EFSM(json_str=input_json)
+    cli_commands = interpret_EFSM(json_str=input_json, packet_actions=POSSIBLE_PACKET_ACTION)
 
     with open(output_file, "w") as out_f:
         out_f.write(cli_commands)
-

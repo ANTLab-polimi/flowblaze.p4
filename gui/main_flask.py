@@ -1,18 +1,25 @@
 import json
 import io
 import logging
+import argparse
 
 from flask import Flask, request, send_file, redirect
 
 from efsm_interpreter import interpret_EFSM
+from p4_json_parser import parse_files
 
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s][%(levelname)s] %(message)s ")
 app = Flask(__name__,  static_folder="www")
 
 
 @app.route('/')
 def root():
     return redirect("index.html")
+
+
+@app.route('/index.html')
+def index():
+    # Return the customized index for the specific use case, otherwise return the default index
+    return html_index if html_index is not None else app.send_static_file("index.html")
 
 
 @app.route('/<path:path>')
@@ -23,9 +30,11 @@ def static_files(path):
 # TODO: change name, it's misleading, we are just generating the control plane rules
 @app.route("/generateP4", methods=['POST'])
 def generate_p4():
+    if gui_actions is None:
+        return
     if request.method == 'POST':
         fsm_json = json.loads(request.data.decode('UTF-8'))
-        result = interpret_EFSM(json_str=fsm_json)
+        result = interpret_EFSM(json_str=fsm_json, packet_actions=gui_actions)
         mem = io.BytesIO()
         mem.write(result.encode("utf-8"))
         mem.seek(0)
@@ -39,4 +48,23 @@ def generate_p4():
 
 
 if __name__ == "__main__":
+    # Parse and patch index and config file
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--p4_file', type=str, required=True)
+    parser.add_argument('--json_file', type=str, required=True)
+    parser.add_argument('--debug', help="Activate debug output", action='store_true')
+    args = parser.parse_args()
+
+    p4_file = args.p4_file
+    json_file = args.json_file
+    debug = args.debug
+
+    if debug:
+        logging.basicConfig(level=logging.DEBUG, format="[%(asctime)s][%(levelname)s] %(message)s ")
+    else:
+        logging.basicConfig(level=logging.INFO, format="[%(asctime)s][%(levelname)s] %(message)s ")
+
+    # Parse P4 and Json file to build the custom GUI
+    html_index, gui_actions = parse_files(p4_file, json_file)
+
     app.run(host='0.0.0.0', port=8000)
