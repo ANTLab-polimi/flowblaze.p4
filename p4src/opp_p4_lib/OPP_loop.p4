@@ -175,10 +175,11 @@ control UpdateLogic(inout headers hdr,
 
     apply{
         // Calculate update lookup index
+        // TODO: (improvement) save hash in metadata when calculated for reading registers
         hash(opp_metadata.update_state_index, 
              HashAlgorithm.crc32, 
              (bit<32>) 0,
-             UPDATE_HASH_FIELDS, 
+             FLOW_SCOPE,
              (bit<32>) CONTEXT_TABLE_SIZE);
         // Update state using the update lookup index
         reg_state.write(opp_metadata.update_state_index, opp_metadata.state);
@@ -407,7 +408,7 @@ control OPPLoop (inout headers hdr,
         hash(meta.opp_metadata.lookup_state_index, 
              HashAlgorithm.crc32, 
              (bit<32>) 0,
-             LOOKUP_HASH_FIELDS, 
+             FLOW_SCOPE,
              (bit<32>)CONTEXT_TABLE_SIZE);
 
         // Extract the state and all the registers related to the current lookup
