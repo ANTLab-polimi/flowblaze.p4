@@ -9,7 +9,7 @@ def parse_p4(p4_src_file):
 
     HEADER_FIELD_EXTRACTOR_REGEX = r'#define[ ]+METADATA_OPERATION_COND[ ]+(\(.*\)[ ]*|)(.*)'
     EFSM_MATCH_FIELDS_REGEX = r'#define[ ]+EFSM_MATCH_FIELDS[ ]+(.*)'
-    FLOW_HASH_FIELDS_REGEX = r'#define[ ]+LOOKUP_HASH_FIELDS[ ]+{(.*)}'
+    FLOW_HASH_FIELDS_REGEX = r'#define[ ]+FLOW_SCOPE[ ]+{(.*)}'
 
     EFSM_CONDITIONS_FIELD_str = list(filter(lambda x: 'METADATA_OPERATION_COND' in x, l))
     if len(EFSM_CONDITIONS_FIELD_str) > 0:
@@ -40,7 +40,7 @@ def parse_p4(p4_src_file):
         # missing EFSM_MATCH_FIELDS macro
         EFSM_MATCH_FIELDS = None
 
-    FLOW_HASH_FIELDS_REGEX_str = list(filter(lambda x: 'LOOKUP_HASH_FIELDS' in x, l))
+    FLOW_HASH_FIELDS_REGEX_str = list(filter(lambda x: 'FLOW_SCOPE' in x, l))
     if len(FLOW_HASH_FIELDS_REGEX_str) > 0:
         FLOW_HASH_FIELDS_REGEX_str = FLOW_HASH_FIELDS_REGEX_str[0].strip()
         m = re.search(FLOW_HASH_FIELDS_REGEX, FLOW_HASH_FIELDS_REGEX_str)
@@ -48,10 +48,10 @@ def parse_p4(p4_src_file):
             FLOW_HASH_FIELDS_REGEX_str = m.group(1)
             EFSM_LOOKUP_FIELDS = list(map(lambda x: x.strip(), FLOW_HASH_FIELDS_REGEX_str.split(',')))
         else:
-            # empty LOOKUP_HASH_FIELDS macro
+            # empty FLOW_SCOPE macro
             EFSM_LOOKUP_FIELDS = None
     else:
-        # missing LOOKUP_HASH_FIELDS macro
+        # missing FLOW_SCOPE macro
         EFSM_LOOKUP_FIELDS = None
 
     return EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS

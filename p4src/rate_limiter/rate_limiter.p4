@@ -4,12 +4,9 @@
 
 ################################################## OPP PARAMETERS ##################################################
 
-#define LOOKUP_HASH_FIELDS { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.tcp.srcPort, hdr.tcp.dstPort }
-#define UPDATE_HASH_FIELDS { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.tcp.srcPort, hdr.tcp.dstPort }
+#define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.tcp.srcPort, hdr.tcp.dstPort }
 #define METADATA_OPERATION_COND (bit<32>)meta.applLength
 #define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
-// standard_metadata.ingress_port: exact; 
-// TODO: MUST BE INCREASED
 #define CONTEXT_TABLE_SIZE 1024
 ####################################################################################################################
 
