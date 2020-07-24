@@ -12,7 +12,6 @@
 #define _R1 0x01
 #define _R2 0x02
 #define _R3 0x03
-#define _RTIME 0x0E
 
 #define _G0 0x0F
 #define _G1 0x1F
@@ -37,12 +36,8 @@
 *  - BI-FLOW not implemented (it can be implemented adding a second
 *       lookup hash field and loading also the register of the corresponding second lookup. 
 *       This logic is valid also for the update.)
-*  - I'm not sure that metadata are initialized to 0, maybe is better to check.
 *  - Check corner cases like condition not set and update not evaluated.
 *  - Some problems with multicast groups.
-*  - Find a way to make the user able to define at compile time the actions that can be used in the EFSM table.
-*       In this way the user can define arbitrary actions to be applied in the M/A table (EFSM table) like in the OpenFlow extension.
-*  - It is better to separate the EFSM table in 2 M/A table, one that defines the update action and the other that defines the action to be applied to the packet.
 */
 
 // Global Data Variable: 4
@@ -54,7 +49,6 @@ register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R1;
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R2;
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R3;
 
-register<bit<32>>(CONTEXT_TABLE_SIZE) reg_RTIME; // Specific register dedicated to timeout management
 
 
 // Register that stores the state of the flows
@@ -92,9 +86,6 @@ control ConditionBlock(inout OPP_single_condition_t meta_c_blk,
             if(meta_c_blk.op1 == _G3) {
                 meta_c_blk.operand1 = opp_metadata.G3;
             }
-            if(meta_c_blk.op1 == _RTIME) {
-                meta_c_blk.operand1 = opp_metadata.RTIME;
-            }
             if(meta_c_blk.op1 == _META) {
                 meta_c_blk.operand1 = opp_metadata.pkt_data;
             }
@@ -130,9 +121,6 @@ control ConditionBlock(inout OPP_single_condition_t meta_c_blk,
             }
             if(meta_c_blk.op2 == _G3) {
                 meta_c_blk.operand2 = opp_metadata.G3;
-            }
-            if(meta_c_blk.op2 == _RTIME) {
-                meta_c_blk.operand2 = opp_metadata.RTIME;
             }
             if(meta_c_blk.op2 == _META) {
                 meta_c_blk.operand2 = opp_metadata.pkt_data;
@@ -211,9 +199,6 @@ control UpdateLogic(inout headers hdr,
             if(update_block.op1 == _G3) {
                 update_block.operand1 = opp_metadata.G3;
             }
-            if(update_block.op1 == _RTIME) {
-                update_block.operand1 = opp_metadata.RTIME;
-            }
             if(update_block.op1 == _META) {
                 update_block.operand1 = opp_metadata.pkt_data;
             }
@@ -249,9 +234,6 @@ control UpdateLogic(inout headers hdr,
             }
             if(update_block.op2 == _G3) {
                 update_block.operand2 = opp_metadata.G3;
-            }
-            if(update_block.op2 == _RTIME) {
-                update_block.operand2 = opp_metadata.RTIME;
             }
             if(update_block.op2 == _META) {
                 update_block.operand2 = opp_metadata.pkt_data;
@@ -292,40 +274,28 @@ control UpdateLogic(inout headers hdr,
             if (op_done == 0b1){
   
                 if(update_block.result == _R0) {
-                    //opp_metadata.R0 = t_result;
                     reg_R0.write(opp_metadata.update_state_index, t_result);
                 }
                 if(update_block.result == _R1) {
-                    //opp_metadata.R1 = t_result;
                     reg_R1.write(opp_metadata.update_state_index, t_result);
                 }
                 if(update_block.result == _R2) {
-                    //opp_metadata.R2 = t_result;
                     reg_R2.write(opp_metadata.update_state_index, t_result);
                 }
                 if(update_block.result == _R3) {
-                    //opp_metadata.R3 = t_result;
                     reg_R3.write(opp_metadata.update_state_index, t_result);
-                }
-                if(update_block.result == _RTIME) {
-                    //opp_metadata.RTIME = t_result;
-                    reg_RTIME.write(opp_metadata.update_state_index, t_result);
                 }
 
                 if(update_block.result == _G0) {
-                    //opp_metadata.G0 = t_result;
                     reg_G.write(0, t_result);
                 }
                 if(update_block.result == _G1) {
-                    //opp_metadata.G1 = t_result;
                     reg_G.write(1, t_result);
                 }
                 if(update_block.result == _G2) {
-                    //opp_metadata.G2 = t_result;
                     reg_G.write(2, t_result);
                 }
                 if(update_block.result == _G3) {
-                    //opp_metadata.G3 = t_result;
                     reg_G.write(3, t_result);
                 }
             }
@@ -417,7 +387,6 @@ control OPPLoop (inout headers hdr,
         reg_R1.read(meta.opp_metadata.R1, meta.opp_metadata.lookup_state_index);
         reg_R2.read(meta.opp_metadata.R2, meta.opp_metadata.lookup_state_index);
         reg_R3.read(meta.opp_metadata.R3, meta.opp_metadata.lookup_state_index);
-        reg_RTIME.read(meta.opp_metadata.RTIME, meta.opp_metadata.lookup_state_index);
 
         // Extract also the global register
         reg_G.read(meta.opp_metadata.G0, 0);
@@ -480,12 +449,6 @@ control OPPLoop (inout headers hdr,
         meta.opp_metadata.condition_block.c_block_3.op2 = op2_3;
         meta.opp_metadata.condition_block.c_block_3.operand1 = operand1_3;
         meta.opp_metadata.condition_block.c_block_3.operand2 = operand2_3;
-
-        //meta.opp_metadata.condition_block.c_block_time.cond = cond_time;
-        //meta.opp_metadata.condition_block.c_block_time.op1 = _RTIME;
-        //meta.opp_metadata.condition_block.c_block_time.op2 = _TIME_NOW;
-        //meta.opp_metadata.condition_block.c_block_time.operand1 = 0;
-        //meta.opp_metadata.condition_block.c_block_time.operand2 = (bit<32>) standard_metadata.ingress_global_timestamp;
 
     }
     direct_counter(CounterType.packets_and_bytes) condition_table_counter;

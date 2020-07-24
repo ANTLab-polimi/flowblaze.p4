@@ -40,7 +40,6 @@ struct OPP_t {
     bit<32> R1;
     bit<32> R2;
     bit<32> R3;
-    bit<32> RTIME;
     bit<32> G0;
     bit<32> G1;
     bit<32> G2;
