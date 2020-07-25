@@ -76,13 +76,12 @@ def interpret_EFSM(json_str, packet_actions):
         if e['reg_action'] == [] and e['pkt_action'] == []:
             if link['type'] == 'Link':
                 logger.warning(
-                    "Skipping ({})->({}) transition '{}': at least one action is required".format(e['src'], e['dst'],
+                    "No action specifided for ({})->({}) transition '{}': default action will be applied".format(e['src'], e['dst'],
                                                                                                   e['transition']))
             else:
                 logger.warning(
-                    "Skipping self-transition in state ({}) '{}': at least one action is required".format(e['src'], e[
+                    "No action specifided for self-transition in state ({}) '{}': default action will be applied".format(e['src'], e[
                         'transition']))
-            continue
         edges.append(e)
 
     # Now Flow Variable will contain a dict with ID and the name of the variables
