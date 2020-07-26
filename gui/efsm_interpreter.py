@@ -2,10 +2,13 @@ import argparse
 import copy
 import json
 import logging
+import re
 
 from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, POSSIBLE_PACKET_ACTION, \
     TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, \
-    TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL
+    TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL, \
+    MAX_CONDITIONS_NUM, MAX_REG_ACTIONS_PER_TRANSITION, REG_ACTION_REGEX, COND_REGEX, \
+    FDV_BASE_REGISTER, GDV_BASE_REGISTER, PKT_ACTION_REGEX
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +27,57 @@ logger = logging.getLogger(__name__)
 # --> MATCHES|CONDITIONS|REG_UPDATE|ACTIONS
 # ipv4.srcAddr==10.0.0.1;ipv4.srcAddr==10.0.0.1;|cnt<=5;|cnt=cnt+1|fwd(6)
 
+def normalized_reg_actions(reg_actions):
+    # turns "x=y" update actions into "x=y+0"
+    normalized_reg_act = []
+    for reg_act in reg_actions:
+        has_operation = False
+        for op in OPERATIONS.keys():
+            if op in reg_act and op != 'NOP':
+                has_operation = True
+                break
+        if has_operation:
+            normalized_reg_act.append(reg_act)
+        else:
+            normalized_reg_act.append(reg_act + '+0')
+
+    return normalized_reg_act
+
+def parse_condition(cond):
+    m = re.match(COND_REGEX, cond)
+    if m:
+        op1 = m.group(1)
+        cond = m.group(2)
+        op2 = m.group(3)
+        return op1, cond, op2
+    else:
+        return None
+
+def parse_reg_action(action):
+    m = re.match(REG_ACTION_REGEX, action)
+    if m:
+        res = m.group(1)
+        op1 = m.group(2)
+        op = m.group(3)
+        op2 = m.group(4)
+        return res, op1, op, op2
+    else:
+        return None
+
+def parse_pkt_action(action):
+    m = re.match(PKT_ACTION_REGEX, action)
+    if m:
+        act = m.group(1)
+        args = m.group(2)
+        return act, args
+    else:
+        return None
+
+def fdv_register(reg_id):
+    return '0x%02X' % (FDV_BASE_REGISTER + reg_id)
+
+def gdv_register(reg_id):
+    return '0x%02X' % (GDV_BASE_REGISTER + (reg_id<<4))
 
 def interpret_EFSM(json_str, packet_actions):
     output = ""
@@ -32,14 +86,23 @@ def interpret_EFSM(json_str, packet_actions):
     links = json_str['links']
 
     edges = []
-    flow_variables = set()
+    flow_data_variables = set()
+    global_data_variables = set()
     conditions = set()
     reg_actions = set()
     pkt_actions = set()
 
     # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
     for link in links:
+        logger.debug('Parsing transition: "%s"' % link['text'])
         link['text'] = link['text'].replace(' ', '')
+        # temporary structures
+        _conditions = []
+        _global_data_variables = []
+        _flow_data_variables = []
+        _reg_actions = []
+        _pkt_actions = []
+        illegal_transition = False
 
         if link['type'] == 'Link':
             e = {'src': link['nodeA'], 'dst': link['nodeB'], 'transition': link['text']}
@@ -52,42 +115,137 @@ def interpret_EFSM(json_str, packet_actions):
         tmp = link['text'].split('|')
 
         e['match'] = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
+        # TODO how is 'match' data handled afterwards?
 
+        # NB conditions are then parsed in one shot because they are globally configured.
+        # Actions on registers are instead parsed individually for each transition
         e['condition'] = list(filter(lambda c: len(c) > 0, tmp[1].split(';')))
-
         for cond in e['condition']:
-            if len(cond) > 0:
-                conditions.add(cond)
+            if parse_condition(cond):
+                _conditions.append(cond)
+            else:
+                illegal_transition = True
+                logger.warning('Cannot parse condition: "%s"' % cond)
+                break
+        if illegal_transition:
+            # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
+            logger.warning('Skipping invalid transition: "%s"' % link['text'])
+            continue
 
         e['reg_action'] = list(filter(lambda x: len(x) > 0, tmp[2].split(';')))
-        # turns "x=y" update actions into "x=y+0"
-        e['reg_action'] = list(
-            map(lambda x: x + '+0' if all(op not in x for op in OPERATIONS.keys() if op is not 'NOP') else x,
-                e['reg_action']))
+        e['reg_action'] = normalized_reg_actions(e['reg_action'])
+        if len(e['reg_action']) > MAX_REG_ACTIONS_PER_TRANSITION:
+            # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
+            logger.warning('Too many register actions per transition')
+            logger.warning('Skipping invalid transition: "%s"' % link['text'])
+            continue
         for ra in e['reg_action']:
-            if len(ra) > 0:
-                reg_actions.add(ra)
-                if EQUAL in ra:
-                    flow_variables.add(ra.split(EQUAL)[0])
+            a = parse_reg_action(ra)
+            if a:
+                res, op1, op, op2 = a
+                # reg_action result validation
+                if res[0] == '#':
+                    _global_data_variables.append(res)
+                elif res[0] == '@':
+                    illegal_transition = True
+                    logger.warning('Invalid register action: "%s"' % ra)
+                    if res in ['@meta', '@now']:
+                        logger.warning("A register action cannot store the result into @meta or @now")
+                    else:
+                        logger.warning('Invalid result register: "%s"' % res)
+                    break
+                elif res.isnumeric():
+                    illegal_transition = True
+                    logger.warning('Invalid register action: "%s"' % ra)
+                    logger.warning("A register action cannot store the result into a constant")
+                    break
+                else:
+                    _flow_data_variables.append(res)
+                # reg_action operators validation
+                for op in [op1, op2]:
+                    if op[0] == '#':
+                        _global_data_variables.append(op)
+                    elif op[0] == '@':
+                        if op in ['@meta', '@now']:
+                            pass
+                        else:
+                            illegal_transition = True
+                            logger.warning('Invalid register action: "%s"' % ra)
+                            logger.warning('Invalid register operator: "%s"' % op)
+                            break
+                    elif op.isnumeric():
+                        pass
+                    else:
+                        _flow_data_variables.append(op)
+                if illegal_transition:
+                    # we can avoid parsing ther rest of the register actions
+                    break
+                else:
+                    _reg_actions.append(ra)
+            else:
+                illegal_transition = True
+                logger.warning('Cannot parse register action: "%s"' % ra)
+                break
+        if illegal_transition:
+            # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
+            logger.warning('Skipping invalid transition: "%s"' % link['text'])
+            continue
+
         e['pkt_action'] = list(filter(lambda x: len(x) > 0, tmp[3].split(';')))
         for pa in e['pkt_action']:
-            if len(pa) > 0:
-                pkt_actions.add(pa)
-        if e['reg_action'] == [] and e['pkt_action'] == []:
+            if parse_pkt_action(pa):
+                # TODO validate the number of parameters!
+                found = False
+                for possible_pa in packet_actions:
+                    if possible_pa in pa:
+                        found = True
+                        _pkt_actions.append(pa)
+                        break
+                if not found:
+                    illegal_transition = True
+                    logger.warning('Unrecognized packet action: "%s"' % pa)
+                    break
+            else:
+                illegal_transition = True
+                logger.warning('Cannot parse packet action: "%s"' % ra)
+                break
+        if illegal_transition:
+            # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
+            logger.warning('Skipping invalid transition: "%s"' % link['text'])
+            continue
+
+        if e['pkt_action'] == []:
             if link['type'] == 'Link':
                 logger.warning(
-                    "No action specifided for ({})->({}) transition '{}': default action will be applied".format(e['src'], e['dst'],
+                    "No action specified for ({})->({}) transition '{}': default action will be applied".format(e['src'], e['dst'],
                                                                                                   e['transition']))
             else:
                 logger.warning(
-                    "No action specifided for self-transition in state ({}) '{}': default action will be applied".format(e['src'], e[
+                    "No action specified for self-transition in state ({}) '{}': default action will be applied".format(e['src'], e[
                         'transition']))
+
+        # now that we are sure the transition is fully valid we can update all the structures
+        for x in _conditions:
+            conditions.add(x)
+        for x in _global_data_variables:
+            global_data_variables.add(x)
+        for x in _flow_data_variables:
+            flow_data_variables.add(x)
+        for x in _reg_actions:
+            reg_actions.add(x)
+        for x in _pkt_actions:
+            pkt_actions.add(x)
+
         edges.append(e)
 
     # Now Flow Variable will contain a dict with ID and the name of the variables
-    flow_variables = dict(enumerate(flow_variables))
-    flow_variables_reverse = {v: k for k, v in flow_variables.items()}
-    logger.debug("Reversed flow variables: {}".format(flow_variables_reverse))
+    flow_data_variables = dict(enumerate(flow_data_variables))
+    flow_data_variables_reverse = {v: k for k, v in flow_data_variables.items()}
+    logger.debug("Reversed flow variables: {}".format(flow_data_variables_reverse))
+
+    global_data_variables = dict(enumerate(global_data_variables))
+    global_data_variables_reverse = {v: k for k, v in global_data_variables.items()}
+    logger.debug("Reversed global variables: {}".format(global_data_variables_reverse))
 
     conditions = dict(enumerate(conditions))
     conditions_reverse = {v: k for k, v in conditions.items()}
@@ -102,93 +260,144 @@ def interpret_EFSM(json_str, packet_actions):
 
     conditions_parsed = {}
     # ------------------------------ CONDITIONS -----------------------------------------------------------------
-    # TODO can we understand that "pkt >= 10" and "pkt < 10" are the same condition?
-    # Interpret the conditions, maximum
+    condition_parsing_failure = False
     for (i, c) in conditions.items():
         tmp_cond = copy.deepcopy(TEMPLATE_CONDITION)
-        for pc in CONDITIONS.keys():
-            if pc in c:
-                cond = c.split(pc)
-                tmp_cond['cond'] = CONDITIONS[pc]
-                for (x, e) in enumerate(cond):
-                    if e in flow_variables_reverse.keys():
+        cond = parse_condition(c)
+        if cond:
+            op1, operator, op2 = cond
+            tmp_cond['cond'] = CONDITIONS[operator]
+            for op_id, op in zip([1, 2], [op1, op2]):
+                if op[0] not in ['@', '#']:
+                    if op in flow_data_variables_reverse.keys():
                         # It is a FDV
-                        if x == 0:
-                            tmp_cond['op1'] = flow_variables_reverse[e]
-                        elif x == 1:
-                            tmp_cond['op2'] = flow_variables_reverse[e]
-                    elif e in META:
-                        # It is a META (NOW, EXPL, META)
-                        if x == 0:
-                            tmp_cond['op1'] = REGISTERS[e]
-                        elif x == 1:
-                            tmp_cond['op2'] = REGISTERS[e]
+                        tmp_cond['op%d' % op_id] = fdv_register(flow_data_variables_reverse[op])
+                    elif not op.isnumeric():
+                        condition_parsing_failure = True
+                        logger.warning('Unknown flow data variable "%s"' % op)
+                        break
                     else:
                         # it is a specific value (number)
-                        if x == 0:
-                            tmp_cond['op1'] = REGISTERS["EXPL"]
-                            tmp_cond['operand1'] = int(e)
-                        elif x == 1:
-                            tmp_cond['op2'] = REGISTERS["EXPL"]
-                            tmp_cond['operand2'] = int(e)
-                    # print(tmp_cond)
+                        tmp_cond['op%d' % op_id] = REGISTERS["EXPL"]
+                        tmp_cond['operand%d' % op_id] = int(op)
+                elif op[0] == '#':
+                    if op in global_data_variables_reverse.keys():
+                        # It is a GDV
+                        tmp_cond['op%d' % op_id] = gdv_register(global_data_variables_reverse[op])
+                    else:
+                        condition_parsing_failure = True
+                        logger.warning('Unknown global data variable "%s"' % op)
+                        break
+                elif op[0] == '@' and op in META:
+                    # It is a META (NOW, META)
+                    tmp_cond['op%d' % op_id] = REGISTERS[op]
+                else:
+                    condition_parsing_failure = True
+                    logger.warning('Cannot parse operator "%s"' % op)
+                    break
+
+            if condition_parsing_failure:
                 break
-        conditions_parsed[c] = tmp_cond
+            conditions_parsed[c] = tmp_cond
+        else:
+            # It should never happen because we have already validated all the conditions in all the transitions
+            condition_parsing_failure = True
+            break
+    if condition_parsing_failure:
+        logger.warning('Fatal error while parsing condition "%s"' % c)
+        # TODO what shall we return?
+        return
+    # TODO can we understand that "pkt >= 10" and "pkt < 10" are the same condition?
+    if len(conditions_parsed) > MAX_CONDITIONS_NUM:
+        logger.warning('Too many conditions')
+        # TODO what shall we return?
+        return
     logger.info("Parsed Conditions: {}".format(conditions_parsed))
     # -----------------------------------------------------------------------------------------------------------
 
-    # ------------------------------ FDV OPERATIONS -----------------------------------------------------------------
-    fdv_actions_parsed = {}
+    # ------------------------------ REG OPERATIONS -----------------------------------------------------------------
+    reg_actions_parsed = {}
+    reg_action_parsing_failure = False
     for (i, a) in reg_actions.items():
         tmp_action = copy.deepcopy(TEMPLATE_ACTION)
-        res = a.split(EQUAL)[0]
-        op = a.split(EQUAL)[1]
-        if res in flow_variables_reverse.keys():
-            # Set where result should go
-            tmp_action['result'] = flow_variables_reverse[res]
-            for po in OPERATIONS.keys():
-                if po in op:
-                    # po is the actual operation
-                    tmp_action['operation'] = OPERATIONS[po]
-                    act = op.split(po)
-                    for (x, e) in enumerate(act):
-                        if e in flow_variables_reverse.keys():
-                            # It is a FDV
-                            if x == 0:
-                                tmp_action['op1'] = flow_variables_reverse[e]
-                            elif x == 1:
-                                tmp_action['op2'] = flow_variables_reverse[e]
-                        elif e in META:
-                            # It is a META (NOW, EXPL, META)
-                            if x == 0:
-                                tmp_action['op1'] = REGISTERS[e]
-                            elif x == 1:
-                                tmp_action['op2'] = REGISTERS[e]
-                        else:
-                            # it is a specific value (number)
-                            if x == 0:
-                                tmp_action['op1'] = REGISTERS["EXPL"]
-                                tmp_action['operand1'] = int(e)
-                            elif x == 1:
-                                tmp_action['op2'] = REGISTERS["EXPL"]
-                                tmp_action['operand2'] = int(e)
+        act = parse_reg_action(a)
+        if act:
+            res, op1, op, op2 = act
+            tmp_action['operation'] = OPERATIONS[op]
+
+            if res in flow_data_variables_reverse.keys():
+                tmp_action['result'] = fdv_register(flow_data_variables_reverse[res])
+            elif res in global_data_variables_reverse.keys():
+                tmp_action['result'] = gdv_register(global_data_variables_reverse[res])
+            else:
+                reg_action_parsing_failure = True
+                logger.warning('Unknown result data variable "%s"' % res)
+                break
+
+            for op_id, op in zip([1, 2], [op1, op2]):
+                if op[0] not in ['@', '#']:
+                    if op in flow_data_variables_reverse.keys():
+                        # It is a FDV
+                        tmp_action['op%d' % op_id] = fdv_register(flow_data_variables_reverse[op])
+                    elif not op.isnumeric():
+                        reg_action_parsing_failure = True
+                        logger.warning('Unknown flow data variable "%s"' % op)
+                        break
+                    else:
+                        # it is a specific value (number)
+                        tmp_action['op%d' % op_id] = REGISTERS["EXPL"]
+                        tmp_action['operand%d' % op_id] = int(op)
+                elif op[0] == '#':
+                    if op in global_data_variables_reverse.keys():
+                        # It is a GDV
+                        tmp_action['op%d' % op_id] = gdv_register(global_data_variables_reverse[op])
+                    else:
+                        reg_action_parsing_failure = True
+                        logger.warning('Unknown global data variable "%s"' % op)
+                        break
+                elif op[0] == '@' and op in META:
+                    # It is a META (NOW, META)
+                    tmp_action['op%d' % op_id] = REGISTERS[op]
+                else:
+                    reg_action_parsing_failure = True
+                    logger.warning('Cannot parse operator "%s"' % op)
                     break
-            fdv_actions_parsed[a] = tmp_action
+
+            if reg_action_parsing_failure:
+                break
+            reg_actions_parsed[a] = tmp_action
         else:
-            logger.warning('{} is not a FLOW DATA VARIABLE'.format(res))
-    logger.info("FDV actions: {}".format(fdv_actions_parsed))
+            # It should never happen because we have already validated all the reg actions in all the transitions
+            reg_action_parsing_failure = True
+            break
+    if reg_action_parsing_failure:
+        logger.warning('Fatal error while parsing reg action "%s"' % a)
+        # TODO what shall we return?
+        return
+    logger.info("REG actions: {}".format(reg_actions_parsed))
     # ---------------------------------------------------------------------------------------------------------------
 
     # ------------------------------ PACKET ACTIONS -----------------------------------------------------------------
     packet_actions_parsed = {}
+    pkt_action_parsing_failure = False
     for (i, pkt_a) in pkt_actions.items():
         tmp_pkt_action = copy.deepcopy(TEMPLATE_PACKET_ACTION)
         for pa in packet_actions:
             if pa in pkt_a:
-                tmp_pkt_action['name'] = pa.split('(')[0]
-                tmp_pkt_action['parameters'] = pkt_a.replace(pa, '').replace('(', '').replace(')', '').split(',')
-                break
+                a = parse_pkt_action(pkt_a)
+                if a:
+                    name, args = a
+                    tmp_pkt_action['name'] = name
+                    tmp_pkt_action['parameters'] = args.split(',')
+                else:
+                    # It should never happen because we have already validated all the reg actions in all the transitions
+                    pkt_action_parsing_failure = True
+                    break
         packet_actions_parsed[pkt_a] = tmp_pkt_action
+    if pkt_action_parsing_failure:
+        logger.warning('Fatal error while parsing pkt action "%s"' % a)
+        # TODO what shall we return?
+        return
     logger.info("Packet actions: {}".format(packet_actions_parsed))
     # ---------------------------------------------------------------------------------------------------------------
 
@@ -196,7 +405,7 @@ def interpret_EFSM(json_str, packet_actions):
     for e in edges:
         e['reg_action_parsed'] = []
         for act in e['reg_action']:
-            e['reg_action_parsed'].append(fdv_actions_parsed[act])
+            e['reg_action_parsed'].append(reg_actions_parsed[act])
 
         e['cond_parsed'] = []
         for cond in e['condition']:
@@ -218,6 +427,7 @@ def interpret_EFSM(json_str, packet_actions):
     for cond in lst_cond:
         cond_table_config += str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
             cond[2]['operand1']) + ' ' + str(cond[2]['operand2']) + ' '
+    # TODO shall we explicitly fill cond_table_config with NOP conditions up to MAX_CONDITIONS_NUM like below?
     # --------------------------------------------------------------------------------------------------------------
 
     # ------------------------------- Generate entries for the EFSM table ------------------------------------------
@@ -254,8 +464,8 @@ def interpret_EFSM(json_str, packet_actions):
             tmp['operand2_' + str(cnt)] = r_a['operand2']
             cnt += 1
         # Fill up with empty value the unused register update actions
-        for i in range(cnt, 2):
-            tmp['operation_' + str(i)] = '0'
+        for i in range(cnt, MAX_REG_ACTIONS_PER_TRANSITION):
+            tmp['operation_' + str(i)] = OPERATIONS['NOP']
             tmp['result_' + str(i)] = '0'
             tmp['op1_' + str(i)] = '0'
             tmp['op2_' + str(i)] = '0'
@@ -265,6 +475,10 @@ def interpret_EFSM(json_str, packet_actions):
         # Set the action to be performed on the packet, the actual action is performed in the pkt_actions table
         for p_action in e['pkt_action']:
             tmp['pkt_action'] = pkt_actions_reverse[p_action]
+        if len(e['pkt_action']) == 0:
+            # We set a dummy value for the pkt_action parameter so that an unknown value for opp_metadata.pkt_action
+            # metadata triggers the execution of the default entry in the pkt_action table following the oppLoop
+            tmp['pkt_action'] = max(pkt_actions_reverse.values()) + 1
 
         tmp['priority'] = DEFAULT_PRIO_EFSM  # Default priority
 
@@ -278,6 +492,8 @@ def interpret_EFSM(json_str, packet_actions):
         output += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i)) + "&&&0xFF",
                                                      action_parameters=action_parameters, priority='10') + "\n"
     # --------------------------------------------------------------------------------------------------------------
+
+    # TODO print summary of fdv, gdv
 
     logger.debug("Generated entries:\n{}".format(output))
     return output, 'OK'
