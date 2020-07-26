@@ -229,7 +229,7 @@ function generateP4(){
     } else {
       alert("The EFSM includes invalid transitions!\nCheck the debug message");
     }
-    document.getElementById("debug_msg").value = xhr.getResponseHeader('debug_msg');
+    document.getElementById("debug_msg").value = atob(xhr.getResponseHeader('debug_msg'));
   };
   xhr.send(localStorage['fsm']);
 }
@@ -243,7 +243,7 @@ function saveBlob(blob, fileName) {
 
 function loadSampleFSMrate(){
   localStorage.clear();
-  localStorage['fsm'] = '{"nodes":[{"x":91,"y":164,"text":"0","isAcceptState":false},{"x":392,"y":176,"text":"1","isAcceptState":false},{"x":679,"y":247,"text":"2","isAcceptState":false}],"links":[{"type":"Link","nodeA":0,"nodeB":1,"text":"| | rate = META ; t_lim = NOW + 5000000 | forward","lineAngleAdjust":3.141592653589793,"parallelPart":0.7678759086685021,"perpendicularPart":-95.75499679381257},{"type":"SelfLink","node":1,"text":"| rate <= 800000 ; t_lim >= NOW | rate = rate + META | forward","anchorAngle":-1.3159402802923779},{"type":"SelfLink","node":1,"text":"| t_lim < NOW | rate = META ; t_lim = NOW + 5000000 | forward","anchorAngle":2.0797860706936744},{"type":"Link","nodeA":1,"nodeB":2,"text":"| rate > 800000 ; t_lim >= NOW | | _drop() ","lineAngleAdjust":3.141592653589793,"parallelPart":0.7043226684819606,"perpendicularPart":-26.90542774619244},{"type":"SelfLink","node":2,"text":"| t_lim >= NOW | | _drop()","anchorAngle":1.4249710602599328},{"type":"Link","nodeA":2,"nodeB":1,"text":"| t_lim < NOW | rate = META ; t_lim = NOW + 5000000 | forward","lineAngleAdjust":3.141592653589793,"parallelPart":0.3311863631163482,"perpendicularPart":-70.57964277427901}]}';
+  localStorage['fsm'] = '{"nodes":[{"x":91,"y":164,"text":"0","isAcceptState":false},{"x":392,"y":176,"text":"1","isAcceptState":false},{"x":679,"y":247,"text":"2","isAcceptState":false}],"links":[{"type":"Link","nodeA":0,"nodeB":1,"text":"| | rate = @meta ; t_lim = @now + 5000000 | forward(1)","lineAngleAdjust":3.141592653589793,"parallelPart":0.7678759086685021,"perpendicularPart":-95.75499679381257},{"type":"SelfLink","node":1,"text":"| rate <= 800000 ; t_lim >= @now | rate = rate + @meta | forward(1)","anchorAngle":-1.3159402802923779},{"type":"SelfLink","node":1,"text":"| t_lim < @now | rate = @meta ; t_lim = @now + 5000000 | forward(1)","anchorAngle":2.0797860706936744},{"type":"Link","nodeA":1,"nodeB":2,"text":"| rate > 800000 ; t_lim >= @now | | _drop() ","lineAngleAdjust":3.141592653589793,"parallelPart":0.7043226684819606,"perpendicularPart":-26.90542774619244},{"type":"SelfLink","node":2,"text":"| t_lim >= @now | | _drop()","anchorAngle":1.4249710602599328},{"type":"Link","nodeA":2,"nodeB":1,"text":"| t_lim < @now | rate = @meta ; t_lim = @now + 5000000 | forward(1)","lineAngleAdjust":3.141592653589793,"parallelPart":0.3311863631163482,"perpendicularPart":-70.57964277427901}]}';
   location.reload();
 }
 

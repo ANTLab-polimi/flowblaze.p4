@@ -1,3 +1,4 @@
+import base64
 import json
 import io
 import logging
@@ -49,7 +50,7 @@ def generate_p4():
         else:
             response = make_response()
 
-        response.headers['debug_msg'] = debug_msg
+        response.headers['debug_msg'] = base64.b64encode(debug_msg.encode("utf-8"))
 
         return response
     return
