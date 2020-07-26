@@ -3,7 +3,7 @@ import io
 import logging
 import argparse
 
-from flask import Flask, request, send_file, redirect
+from flask import Flask, request, send_file, redirect, make_response
 
 from efsm_interpreter import interpret_EFSM
 from p4_json_parser import parse_files
@@ -34,16 +34,24 @@ def generate_p4():
         return
     if request.method == 'POST':
         fsm_json = json.loads(request.data.decode('UTF-8'))
-        result = interpret_EFSM(json_str=fsm_json, packet_actions=gui_actions)
-        mem = io.BytesIO()
-        mem.write(result.encode("utf-8"))
-        mem.seek(0)
-        return send_file(
-            mem,
-            mimetype="text/plain",
-            attachment_filename="out.cli",
-            as_attachment=True,
-            cache_timeout=0)
+        cli_config, debug_msg = interpret_EFSM(json_str=fsm_json, packet_actions=gui_actions)
+        if cli_config:
+            mem = io.BytesIO()
+            mem.write(cli_config.encode("utf-8"))
+            mem.seek(0)
+            file = send_file(
+                mem,
+                mimetype="text/plain",
+                attachment_filename="out.cli",
+                as_attachment=True,
+                cache_timeout=0)
+            response = make_response(file)
+        else:
+            response = make_response()
+
+        response.headers['debug_msg'] = debug_msg
+
+        return response
     return
 
 

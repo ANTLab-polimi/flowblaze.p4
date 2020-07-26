@@ -97,25 +97,29 @@
 <label id=out></label>
 <table>
   <tr>
-    <td><canvas id="canvas" width="800" height="400">
-<span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
-</canvas></td>
-    <td style="padding:10px">
-<a href="#" id="loadSample" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</a>
-<br><br>
-<a href="#" id="loadSample" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</a>
-<br><br>
-<a href="#" id="generateP4" onclick="generateP4()">GENERATE P4</a>
-<br><br>
-<a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a>
-<br><br>
-<br><br>
-  FSM designer instructions:<ul>
-  <li><b>Add a state:</b> double-click on the canvas</li>
-  <li><b>Add an arrow:</b> shift-drag on the canvas</li>
-  <li><b>Move something:</b> drag it around</li>
-  <li><b>Delete something:</b> click it and press the delete key</li>
-</ul></td>
+    <td><a href="#" id="loadSample" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</a></td>
+    <td><a href="#" id="loadSample" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</a></td>
+    <td><a href="#" id="generateP4" onclick="generateP4()">GENERATE P4</a></td>
+    <td><a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a></td>
+  </tr>
+  <tr>
+    <td colspan="4"><canvas id="canvas" width="800" height="400">
+    <span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
+    </canvas>
+    </td>
+    <td style="padding:10px" class="instructions">
+      FSM designer instructions:<ul>
+      <li><b>Add a state:</b> double-click on the canvas</li>
+      <li><b>Add an arrow:</b> shift-drag on the canvas</li>
+      <li><b>Move something:</b> drag it around</li>
+      <li><b>Delete something:</b> click it and press the delete key</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4">
+    <textarea id=debug_msg rows=10></textarea>
+    </td>
   </tr>
 </table>
 
