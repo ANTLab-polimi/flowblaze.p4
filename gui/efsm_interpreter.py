@@ -280,7 +280,7 @@ def interpret_EFSM(json_str, packet_actions):
     # --------------------------------------------------------------------------------------------------------------
 
     logger.debug("Generated entries:\n{}".format(output))
-    return output
+    return output, 'OK'
 
 # TODO: parse P4 and JSON files to retrieve the packet actions instead of using the hardcoded one in config.py
 if __name__ == '__main__':

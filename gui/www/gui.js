@@ -222,9 +222,14 @@ function generateP4(){
   xhr.onload = function () {
     var blob = xhr.response;
     var contentDispo = xhr.getResponseHeader('Content-Disposition');
-    // https://stackoverflow.com/a/23054920/
-    var fileName = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
-    saveBlob(blob, fileName);
+    if (contentDispo != null) {
+      // https://stackoverflow.com/a/23054920/
+      var fileName = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+      saveBlob(blob, fileName);
+    } else {
+      alert("The EFSM includes invalid transitions!\nCheck the debug message");
+    }
+    document.getElementById("debug_msg").value = xhr.getResponseHeader('debug_msg');
   };
   xhr.send(localStorage['fsm']);
 }

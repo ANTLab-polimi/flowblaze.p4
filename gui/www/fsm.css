@@ -1,5 +1,4 @@
 body {
-  /*text-align: center;*/
   background: #DFDFDF;
   margin: 0 30px 100px 30px;
   font: 14px/18px 'Lucida Grande', 'Segoe UI', sans-serif;
@@ -15,25 +14,10 @@ canvas {
   background: white;
   border-radius: 20px;
   -moz-border-radius: 20px;
-  /*margin: 10px auto;*/
 }
 
 a {
   color: black;
-}
-
-/*div {
-  margin: 30px auto;
-  text-align: left;
-  max-width: 800px;
-}*/
-
-.error {
-  display: block;
-  color: red;
-  font-size: 28px;
-  line-height: 30px;
-  padding: 30px;
 }
 
 p {
@@ -41,13 +25,15 @@ p {
   line-height: 20px;
 }
 
-.center {
-  text-align: left;
+textarea {
+  width: 100%;
+  margin-top: 10px;
 }
 
-textarea {
-  display: none;
-  width: 75%;
-  height: 400px;
-  margin: 0 auto;
+td {
+  text-align: center;
+}
+
+td.instructions {
+   text-align: left;
 }
