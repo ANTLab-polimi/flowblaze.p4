@@ -279,7 +279,8 @@ def interpret_EFSM(json_str, packet_actions):
     logger.debug("Actions on registers: {}".format(reg_actions))
 
     pkt_actions = dict(enumerate(pkt_actions))
-    pkt_actions_reverse = {v: k for k, v in pkt_actions.items()}
+    # k+1 is needed to differentiate a un-initialized metadata (that is 0) and an action (that has to be different from 0)
+    pkt_actions_reverse = {v: k+1 for k, v in pkt_actions.items()}
     logger.debug("Reversed packet actions: {}".format(pkt_actions_reverse))
 
     conditions_parsed = {}
@@ -454,11 +455,13 @@ def interpret_EFSM(json_str, packet_actions):
     # Order conditions because order matter in the ID of the condition variable
     lst_cond.sort(key=lambda x: x[0])
     cond_table_config = copy.deepcopy(TEMPLATE_SET_DEFAULT_condition_table)
-
     for cond in lst_cond:
         cond_table_config += str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
             cond[2]['operand1']) + ' ' + str(cond[2]['operand2']) + ' '
-    # TODO shall we explicitly fill cond_table_config with NOP conditions up to MAX_CONDITIONS_NUM like below?
+    # Fill-up the cond_table_config to have the 20 parameters required
+    for _ in range(len(lst_cond), MAX_CONDITIONS_NUM):
+        cond_table_config += CONDITIONS["NOP"] + ' 0 0 0 0 '
+    cli_config += cond_table_config +"\n"
     # --------------------------------------------------------------------------------------------------------------
 
     # ------------------------------- Generate entries for the EFSM table ------------------------------------------
@@ -520,7 +523,8 @@ def interpret_EFSM(json_str, packet_actions):
     for (i, pkt_a) in pkt_actions.items():
         action = packet_actions_parsed[pkt_a]['name']
         action_parameters = ' '.join(packet_actions_parsed[pkt_a]['parameters'])
-        cli_config += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i)) + "&&&0xFF",
+        # i+1 is needed to differentiate a un-initialized metadata (that is 0) and an action (that has to be different from 0)
+        cli_config += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i+1)) + "&&&0xFF",
                                                      action_parameters=action_parameters, priority='10') + "\n"
     # --------------------------------------------------------------------------------------------------------------
     dbg_msg += '-'*80 + '\n'
