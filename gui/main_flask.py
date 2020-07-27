@@ -29,7 +29,7 @@ def static_files(path):
 
 
 # TODO: change name, it's misleading, we are just generating the control plane rules
-@app.route("/generateP4", methods=['POST'])
+@app.route("/generateCfg", methods=['POST'])
 def generate_p4():
     if gui_actions is None:
         return
