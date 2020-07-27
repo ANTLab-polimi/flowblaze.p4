@@ -76,3 +76,19 @@ build-p4:
 		--Wdisable=unsupported \
 		./rate_limiter/rate_limiter.p4
 	@echo "*** P4 program compiled successfully! Output files are in p4build"
+
+status:
+	@echo "GUI Status:"
+	@docker ps | grep -q "${gui_docker_name}"; \
+	if [ $$? -eq 0 ]; then \
+	  echo "  GUI is running"; \
+	else \
+	  echo "  GUI NOT running"; \
+	fi;
+	@echo "Mininet Status:"
+	@docker ps | grep -q "${mn_docker_name}"; \
+	if [ $$? -eq 0 ]; then \
+	  echo "  MININET is running"; \
+	else \
+	  echo "  MININET NOT running"; \
+	fi;
