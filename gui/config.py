@@ -10,22 +10,18 @@ OPERATIONS = {
 }
 
 REGISTERS = {
-      0:        '0x00',     # _R0 = 0x00
-      1:        '0x01',     # _R1 = 0x01
-      2:        '0x02',     # _R2 = 0x02
-      3:        '0x03',     # _R3 = 0x03
-                            # _G0 = 0x0F
-                            # _G1 = 0x1F
-                            # _G2 = 0x2F
-                            # _G3 = 0x3F
-      'META':   '0xF1',     # _META = 0xF1
-      'NOW':    '0xF2',     # _TIME_NOW = 0xF2
-      'EXPL':   '0xFF',     # _EXPL = 0xFF
+      '@meta': '0xF1',     # _META = 0xF1
+      '@now':  '0xF2',     # _TIME_NOW = 0xF2
+      'EXPL':  '0xFF',     # _EXPL = 0xFF
 }
+
+FDV_BASE_REGISTER = 0x00
+GDV_BASE_REGISTER = 0x0F
+
 META = {
-      'META':   '0xF1',     # _META = 0xF1
-      'NOW':   '0xF2',      # _TIME_NOW = 0xF2
-      'EXPL':   '0xFF',     # _EXPL = 0xFF
+      '@meta': '0xF1',     # _META = 0xF1
+      '@now':  '0xF2',     # _TIME_NOW = 0xF2
+      'EXPL':  '0xFF',     # _EXPL = 0xFF
 }
 
 CONDITIONS = OrderedDict([
@@ -66,3 +62,16 @@ TEMPLATE_SET_DEFAULT_EFSMTable = "table_add ingress.oppLoop.EFSM_table define_op
 TEMPLATE_SET_PACKET_ACTIONS = "table_add ingress.pkt_action {action} {action_match} => {action_parameters} {priority}"
 
 POSSIBLE_PACKET_ACTION = ['_drop', 'forward']
+
+MAX_CONDITIONS_NUM = 4
+MAX_REG_ACTIONS_PER_TRANSITION = 2
+
+# TODO generate regex from OPERATIONS and CONDITIONS
+# pay attention to backslashes!
+#>>> '|'.join(filter(lambda x: x != 'NOP', OPERATIONS.keys()))
+#'+|-|>>|<<|*'
+#>>> '|'.join(filter(lambda x: x != 'NOP', CONDITIONS.keys()))
+#'==|>=|<=|>|<'
+REG_ACTION_REGEX = r'([#@]{0,1}[0-9a-zA-Z_-]+)=([#@]{0,1}[0-9a-zA-Z_-]+)([+\-*]|<<|>>)([#@]{0,1}[0-9a-zA-Z_-]+)'
+PKT_ACTION_REGEX = r'(.+)\((.*)\)'
+COND_REGEX = r'([#@]{0,1}[0-9a-zA-Z_-]+)(>|<|>=|<=|==)([#@]{0,1}[0-9a-zA-Z_-]+)'
