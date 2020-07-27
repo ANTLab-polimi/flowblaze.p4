@@ -1,0 +1,7 @@
+table_set_default ingress.oppLoop.condition_table set_condition_fields 0b010 0x00 0xFF 0 10 0b101 0x00 0xFF 0 10 0b000 0 0 0 0 0b000 0 0 0 0
+table_add ingress.oppLoop.EFSM_table define_operation_update_state 0&&&0xFFFF 0&&&0 0&&&0 0&&&0 0&&&0  => 1 0x01 0x00 0xFF 0xFF 1 0 0x00 0 0 0 0 0 2 1
+table_add ingress.oppLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 1&&&1 0&&&0 0&&&0 0&&&0  => 2 0x00 0 0 0 0 0 0x00 0 0 0 0 0 1 1
+table_add ingress.oppLoop.EFSM_table define_operation_update_state 2&&&0xFFFF 0&&&0 0&&&0 0&&&0 0&&&0  => 2 0x00 0 0 0 0 0 0x00 0 0 0 0 0 1 1
+table_add ingress.oppLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 0&&&0 1&&&1 0&&&0 0&&&0  => 1 0x01 0x00 0x00 0xFF 0 1 0x00 0 0 0 0 0 2 1
+table_add ingress.pkt_action _drop 0x1&&&0xFF =>  10
+table_add ingress.pkt_action forward 0x2&&&0xFF => 1 10
