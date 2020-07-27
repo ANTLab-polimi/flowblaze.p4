@@ -99,7 +99,7 @@
   <tr>
     <td><a href="#" id="loadSample" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</a></td>
     <td><a href="#" id="loadSample" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</a></td>
-    <td><a href="#" id="generateP4" onclick="generateP4()">GENERATE P4</a></td>
+    <td><a href="#" id="generateCfg" onclick="generateCfg()">GENERATE SWITCH CONFIG</a></td>
     <td><a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a></td>
   </tr>
   <tr>

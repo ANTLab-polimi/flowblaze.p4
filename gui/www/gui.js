@@ -212,11 +212,11 @@ function clearTransitionString(){
   }
 }
 
-function generateP4(){
+function generateCfg(){
   saveBackup();
 
   var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/generateP4", true);
+  xhr.open("POST", "/generateCfg", true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.responseType = 'blob';
   xhr.onload = function () {
