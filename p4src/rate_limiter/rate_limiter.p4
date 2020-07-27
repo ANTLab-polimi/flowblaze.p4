@@ -4,9 +4,11 @@
 
 ################################################## OPP PARAMETERS ##################################################
 
-#define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr, hdr.tcp.srcPort, hdr.tcp.dstPort }
+#define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
+// Currently METADATA_OPERATION_COND is not used
 #define METADATA_OPERATION_COND (bit<32>)meta.applLength
-#define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
+//#define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
+#define EFSM_MATCH_FIELDS
 #define CONTEXT_TABLE_SIZE 1024
 ####################################################################################################################
 
@@ -73,6 +75,7 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
     action _drop() {
       mark_to_drop(standard_metadata);
+      exit;
     }
 
     direct_counter(CounterType.packets_and_bytes) l2_fwd_counter;
@@ -113,16 +116,11 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
     OPPLoop() oppLoop;
 
     apply {
-      
-        // First decide the forwarding action
-        if (hdr.ethernet.isValid()) {
-          t_l2_fwd.apply();
-        }
-        
-        // OPP MANAGER WITH packet action. Packet action can modify the FWDing
         if (hdr.ethernet.isValid()) {
             oppLoop.apply(hdr, meta, standard_metadata);
             pkt_action.apply();
+            // pkt_action can only decide to drop the packet!
+            t_l2_fwd.apply();
         }
     }
 }

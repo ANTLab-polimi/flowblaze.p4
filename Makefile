@@ -9,25 +9,14 @@ _docker_pull:
 	docker pull ${FLASK_IMG}
 	docker pull ${P4MN_IMG}
 
-build-rate_limiter:
-	$(info *** Compiling Rate Limiter...)
-	@mkdir -p ./p4build/rate_limiter
-	@docker run --rm -v ${curr_dir}:/opp -w /opp ${P4C_IMG} \
-		p4c-bm2-ss --arch v1model -o ./p4build/rate_limiter/bmv2.json \
-		--p4runtime-files ./p4build/rate_limiter/p4info.txt,p4build/rate_limiter/p4info.bin \
-		--Wdisable=unsupported \
-		./p4src/rate_limiter/rate_limiter.p4
-	@echo "*** P4 program compiled successfully! Output files are in p4build/rate_limiter"
-
 start_gui_docker:
 	$(info *** Starting GUI Docker container...)
 	@docker run --rm -d --name gui_opp \
 		-v ${curr_dir}/gui:/oppGui \
 		-v ${curr_dir}/p4src:/p4src \
-		-v ${curr_dir}/p4build:/p4build \
 		-p 8000:8000 \
 		-w /oppGui ${FLASK_IMG} \
-		sh -c 'python main_flask.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4build/rate_limiter/bmv2.json'
+		sh -c 'python main_flask.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 
 stop_gui_docker:
@@ -37,7 +26,7 @@ stop_gui_docker:
 start_gui_local:
 	$(info *** Starting GUI without Docker container...)
 	cd gui/; \
-	python3 main_flask.py --p4_file ../p4src/rate_limiter/rate_limiter.p4 --json_file ../p4build/rate_limiter/bmv2.json
+	python3 main_flask.py --p4_file ../p4src/rate_limiter/rate_limiter.p4 --json_file ../p4src/rate_limiter/p4build/bmv2.json
 
 test_efsm_interpreter:
 	$(info *** Running EFSM interpreter with rate_limiter JSON example...)
@@ -51,4 +40,4 @@ test_p4_json_parser:
 	@docker run --rm --name test_efsm_interpreter \
 		-v ${curr_dir}/:/opp \
 		-w /opp ${FLASK_IMG} \
-		sh -c 'cd ./gui && python p4_json_parser.py ../p4src/rate_limiter/rate_limiter.p4 ../p4build/rate_limiter/bmv2.json'
+		sh -c 'cd ./gui && python p4_json_parser.py ../p4src/rate_limiter/rate_limiter.p4 ../p4src/rate_limiter/p4build/bmv2.json'
