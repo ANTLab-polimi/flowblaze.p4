@@ -10,8 +10,16 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
+function matchesRegex(re, text) {
+  var regex = new RegExp(re);
+  if(regex.test(text)) {
+      return true;
+  } else {
+      return false;
+  }
+}
+
 function addMatch(){
-  //TODO validate input
   //TODO how to define non-exact matches? Like in P4?
   var match = document.getElementById("matchesList");
   var matchField = document.getElementById("matchField");
@@ -23,6 +31,10 @@ function addMatch(){
   }
   if (matchValueText.length == 0) {
     alert("Please specify a non-empty match value!")
+    return;
+  }
+  if (!matchesRegex("[0-9\.]+\&\&\&[0-9]+", matchValueText)) {
+    alert("Invalid match value!")
     return;
   }
   var input = document.createElement("label");
@@ -54,6 +66,15 @@ function addCondition(){
     alert("Please insert a non-empty operand 2!")
     return;
   }
+  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", condOperand1Text)) {
+    alert("Invalid operand1!")
+    return;
+  }
+  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", condOperand2Text)) {
+    alert("Invalid operand2!")
+    return;
+  }
+
   var condition = document.getElementById("conditionsList");
   var conditionOperatorText = conditionOperator.options[conditionOperator.selectedIndex].text;
   var input = document.createElement("label");
@@ -91,6 +112,19 @@ function addUpdate(){
     alert("Please insert a non-empty operand 2!")
     return;
   }
+  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOutputText)) {
+    alert("Invalid output!")
+    return;
+  }
+  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOperand1Text)) {
+    alert("Invalid operand1!")
+    return;
+  }
+  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOperand2Text)) {
+    alert("Invalid operand2!")
+    return;
+  }
+
   var condition = document.getElementById("updateList");
   var updateOperationText = updateOperation.options[updateOperation.selectedIndex].text;
   var input = document.createElement("label");
