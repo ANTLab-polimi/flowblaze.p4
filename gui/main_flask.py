@@ -35,7 +35,7 @@ def generate_p4():
         return
     if request.method == 'POST':
         fsm_json = json.loads(request.data.decode('UTF-8'))
-        cli_config, debug_msg = interpret_EFSM(json_str=fsm_json, packet_actions=gui_actions)
+        cli_config, debug_msg = interpret_EFSM(json_str=fsm_json, packet_actions=gui_actions, efsm_match=efsm_match_fields)
         if cli_config:
             mem = io.BytesIO()
             mem.write(cli_config.encode("utf-8"))
@@ -74,6 +74,6 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO, format="[%(asctime)s][%(levelname)s] %(message)s ")
 
     # Parse P4 and Json file to build the custom GUI
-    html_index, gui_actions = parse_files(p4_file, json_file)
+    html_index, gui_actions, efsm_match_fields = parse_files(p4_file, json_file)
 
     app.run(host='0.0.0.0', port=8000)

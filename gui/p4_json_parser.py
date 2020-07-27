@@ -130,7 +130,7 @@ def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src=
     return "".join(html)
 
 
-def patch_config_py(GUI_actions, src='./config.py', dst='./config.py'):
+def patch_config_py(actions, src='./config.py', dst='./config.py'):
     with open(src, 'r') as f:
         logging.info('Reading %s...' % src)
         py = f.readlines()
@@ -139,10 +139,10 @@ def patch_config_py(GUI_actions, src='./config.py', dst='./config.py'):
     if len(idx) > 0:
         idx = idx[0]
         del py[idx]
-        py.insert(idx, 'POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
+        py.insert(idx, 'POSSIBLE_PACKET_ACTION = %s\n' % actions)
     else:
         logging.warning('Cannot find POSSIBLE_PACKET_ACTION in \'%s\'. Patching at the end of the file...' % src)
-        py.append('POSSIBLE_PACKET_ACTION = %s\n' % GUI_actions)
+        py.append('POSSIBLE_PACKET_ACTION = %s\n' % actions)
 
     with open(dst, 'w') as f:
         logging.info('Patching %s...' % dst)
@@ -163,7 +163,7 @@ def parse_files(p4_file, json_file):
     logging.info('GUI_actions_parameters: %s' % GUI_actions_parameters)
 
     index_h = patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters)
-    return index_h, GUI_actions
+    return index_h, GUI_actions, EFSM_LOOKUP_FIELDS
 
 
 if __name__ == "__main__":
@@ -172,8 +172,7 @@ if __name__ == "__main__":
 
     assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
 
-    index_html, GUI_actions = parse_files(sys.argv[1], sys.argv[2])
-
+    index_html, GUI_actions, EFSM_lookup_fields = parse_files(sys.argv[1], sys.argv[2])
     # Patching files
     patch_config_py(GUI_actions)
     with open(current_index, 'w') as f:

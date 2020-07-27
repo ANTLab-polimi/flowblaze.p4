@@ -82,7 +82,7 @@ def gdv_register(reg_id):
 def invalid_transition_str(edge):
     return 'Skipping invalid transition ({})->({}): "{}"'.format(edge['src'], edge['dst'], edge['transition'])
 
-def interpret_EFSM(json_str, packet_actions):
+def interpret_EFSM(json_str, packet_actions, efsm_match):
     cli_config = ''
     dbg_msg = ''
 
@@ -95,6 +95,8 @@ def interpret_EFSM(json_str, packet_actions):
     conditions = set()
     reg_actions = set()
     pkt_actions = set()
+
+    no_efsm_matches = ["0&&&0" for _ in efsm_match]
 
     # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
     for link in links:
@@ -118,8 +120,21 @@ def interpret_EFSM(json_str, packet_actions):
             continue
         tmp = link['text'].split('|')
 
-        e['match'] = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
-        # TODO how is 'match' data handled afterwards?
+        matches = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
+        if len(matches) == 0:
+            e['match'] = no_efsm_matches
+        else:
+            e['match'] = []
+            i = 0
+            for e_m in efsm_match:
+                if i < len(matches) and e_m in matches[i]:
+                    if "&&&" not in matches[i].split("==")[1]:
+                        dbg_msg += 'Cannot parse EFSM packet header matches: "%s"\n' % matches[i]
+                        return None, dbg_msg
+                    e['match'].append(matches[i].split("==")[1])
+                    i += 1
+                else:
+                    e['match'].append("0&&&0")
 
         # NB conditions are then parsed in one shot because they are globally configured.
         # Actions on registers are instead parsed individually for each transition
@@ -514,6 +529,9 @@ def interpret_EFSM(json_str, packet_actions):
             # metadata triggers the execution of the default entry in the pkt_action table following the oppLoop
             tmp['pkt_action'] = max(pkt_actions_reverse.values()) + 1
 
+
+        # Set the packet header conditions
+        tmp['OTHER_MATCH'] = ' '.join(e['match'])
         tmp['priority'] = DEFAULT_PRIO_EFSM  # Default priority
 
         cli_config += TEMPLATE_SET_DEFAULT_EFSMTable.format(**tmp) + "\n"

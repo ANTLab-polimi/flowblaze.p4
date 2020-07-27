@@ -7,8 +7,7 @@
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
 // Currently METADATA_OPERATION_COND is not used
 #define METADATA_OPERATION_COND (bit<32>)meta.applLength
-//#define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
-#define EFSM_MATCH_FIELDS
+#define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
 #define CONTEXT_TABLE_SIZE 1024
 ####################################################################################################################
 
