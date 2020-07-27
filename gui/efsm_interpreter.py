@@ -80,7 +80,7 @@ def gdv_register(reg_id):
     return '0x%02X' % (GDV_BASE_REGISTER + (reg_id<<4))
 
 def invalid_transition_str(edge):
-    return 'Skipping invalid transition ({})->({}): "{}"'.format(edge['src'], edge['dst'], edge['transition'])
+    return 'Invalid transition ({})->({}): "{}"'.format(edge['src'], edge['dst'], edge['transition'])
 
 def interpret_EFSM(json_str, packet_actions, efsm_match):
     cli_config = ''
@@ -208,7 +208,16 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                 return None, dbg_msg
 
         e['pkt_action'] = list(filter(lambda x: len(x) > 0, tmp[3].split(';')))
-        for pa in e['pkt_action']:
+        if len(e['pkt_action']) > 1:
+            # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
+            logger.warning('Too many packet actions per transition')
+            logger.warning(invalid_transition_str(e))
+            dbg_msg += 'Too many packet actions per transition\n'
+            dbg_msg += invalid_transition_str(e) + '\n'
+            return None, dbg_msg
+        elif len(e['pkt_action']) == 1:
+            e['pkt_action'] = e['pkt_action'][0]
+            pa = e['pkt_action']
             if parse_pkt_action(pa):
                 # TODO validate the number of parameters!
                 found = False
@@ -224,13 +233,13 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                     dbg_msg += invalid_transition_str(e) + '\n'
                     return None, dbg_msg
             else:
-                logger.warning('Cannot parse packet action: "%s"' % ra)
+                logger.warning('Cannot parse packet action: "%s"' % pa)
                 logger.warning(invalid_transition_str(e))
-                dbg_msg += 'Cannot parse packet action: "%s"\n' % ra
+                dbg_msg += 'Cannot parse packet action: "%s"\n' % pa
                 dbg_msg += invalid_transition_str(e) + '\n'
                 return None, dbg_msg
-
-        if e['pkt_action'] == []:
+        else:
+            e['pkt_action'] = None
             if link['type'] == 'Link':
                 logger.warning(
                     "No action specified for ({})->({}) transition '{}': default action will be applied".format(e['src'], e['dst'],
@@ -414,14 +423,6 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         e['reg_action_parsed'] = []
         for act in e['reg_action']:
             e['reg_action_parsed'].append(reg_actions_parsed[act])
-
-        e['cond_parsed'] = []
-        for cond in e['condition']:
-            e['cond_parsed'].append(conditions_parsed[cond])
-
-        e['pkt_action_parsed'] = []
-        for actt in e['pkt_action']:
-            e['pkt_action_parsed'].append(packet_actions_parsed[actt])
     # ---------------------------------------------------------------------------------------------------------------
 
     # ------------------------------------- Generate entry for the condition table  ---------------------------------
@@ -483,13 +484,12 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             tmp['operand2_' + str(i)] = '0'
 
         # Set the action to be performed on the packet, the actual action is performed in the pkt_actions table
-        for p_action in e['pkt_action']:
-            tmp['pkt_action'] = pkt_actions_reverse[p_action]
-        if len(e['pkt_action']) == 0:
-            # We set a dummy value for the pkt_action parameter so that an unknown value for opp_metadata.pkt_action
-            # metadata triggers the execution of the default entry in the pkt_action table following the oppLoop
-            tmp['pkt_action'] = max(pkt_actions_reverse.values()) + 1
-
+        if e['pkt_action']:
+            tmp['pkt_action'] = pkt_actions_reverse[e['pkt_action']]
+        else:
+            # The default 0 value for opp_metadata.pkt_action metadata triggers the execution of the default entry
+            # in the pkt_action table following the oppLoop
+            tmp['pkt_action'] = 0
 
         # Set the packet header conditions
         tmp['OTHER_MATCH'] = ' '.join(e['match'])
