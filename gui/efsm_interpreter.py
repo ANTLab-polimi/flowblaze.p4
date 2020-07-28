@@ -525,6 +525,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
 
     return cli_config, dbg_msg
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', help='EFSM JSON as from the web gui', type=str, required=True)
@@ -544,7 +545,9 @@ if __name__ == '__main__':
     with open(input_file, "r") as in_f:
         input_json = json.loads(in_f.read())
 
-    cli_commands = interpret_EFSM(json_str=input_json, packet_actions=POSSIBLE_PACKET_ACTION)
-
-    with open(output_file, "w") as out_f:
-        out_f.write(cli_commands)
+    cli_config, dbg_msg = interpret_EFSM(json_str=input_json, packet_actions=POSSIBLE_PACKET_ACTION)
+    if not cli_config:
+        logging.error("Failed to parse %s" % input_file)
+    else:
+        with open(output_file, "w") as out_f:
+            out_f.write(cli_config)

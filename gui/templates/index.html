@@ -6,16 +6,22 @@
 <script src="fsm.js"></script>
 </head>
 <body>
+<div style="width:100%">
+  <h2>{{ p4_program_name|upper }}</h2>
+  <ul>
+      <li><b>Flow Scope:</b> {{ flow_scope|join(',') }} </li>
+      <li><b>EFSM header match fields:</b> {{ efsm_match_fields|join(',') }} </li>
+      <li><b>Header condition field (@meta):</b> {{ header_condition_field }} </li>
+  </ul>
+</div>
 <div style="background-color:rgba(255, 0, 0, 0.2); width:60%">
   <select id="matchField">
     <option value="matchField">matchField</option>
-    <option value="hdr.ipv4.srcAddr">hdr.ipv4.srcAddr</option>
-    <option value="hdr.ipv4.dstAddr">hdr.ipv4.dstAddr</option>
-    <!-- <option value="ip">ip</option>
-    <option value="eth">eth</option>
-    <option value="port">port</option> -->
+    {% for m in efsm_match_fields %}
+         <option value="{{ m }}">{{ m }}</option>
+    {% endfor %}
   </select>
-  ==
+  =
   <div class="balloon-wrapper" aria-label="TODO" data-balloon-pos="down-left">
     <input type="text" value="" id="matchValue">
   </div>
@@ -66,12 +72,9 @@
 <div style="background-color:rgba(0, 255, 0, 0.2); width:60%">
   <select id="action">
     <option value="action">action</option>
-    <option value="forward">forward(port)</option>
-    <option value="_drop">_drop()</option>
-    <option value="NoAction">NoAction()</option>
-    <!-- <option value="forward">forward</option>
-    <option value="_drop">_drop</option>
-    <option value="NoAction">NoAction</option> --->
+    {% for a, p in actions.items() %}
+        <option value="{{ a }}">{{ a+'('+p|join(',')+')' }}</option>
+    {% endfor %}
   </select>
   <div class="balloon-wrapper" aria-label="Comma separated action parameters" data-balloon-pos="down-left">
     <input type="text" value="" id="actionParam">
@@ -102,25 +105,29 @@
 <label id=out></label>
 <table>
   <tr>
-    <td><canvas id="canvas" width="800" height="400">
-<span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
-</canvas></td>
-    <td style="padding:10px">
-<a href="#" id="loadSample" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</a>
-<br><br>
-<a href="#" id="loadSample" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</a>
-<br><br>
-<a href="#" id="generateCfg" onclick="generateCfg()">GENERATE SWITCH CONFIG</a>
-<br><br>
-<a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a>
-<br><br>
-<br><br>
-  FSM designer instructions:<ul>
-  <li><b>Add a state:</b> double-click on the canvas</li>
-  <li><b>Add an arrow:</b> shift-drag on the canvas</li>
-  <li><b>Move something:</b> drag it around</li>
-  <li><b>Delete something:</b> click it and press the delete key</li>
-</ul></td>
+    <td><a href="#" id="loadSample" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</a></td>
+    <td><a href="#" id="loadSample" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</a></td>
+    <td><a href="#" id="generateCfg" onclick="generateCfg()">GENERATE SWITCH CONFIG</a></td>
+    <td><a href="#" id="clearFSM" onclick="clearFSM()">CLEAR FSM</a></td>
+  </tr>
+  <tr>
+    <td colspan="4"><canvas id="canvas" width="800" height="400">
+    <span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
+    </canvas>
+    </td>
+    <td style="padding:10px" class="instructions">
+      FSM designer instructions:<ul>
+      <li><b>Add a state:</b> double-click on the canvas</li>
+      <li><b>Add an arrow:</b> shift-drag on the canvas</li>
+      <li><b>Move something:</b> drag it around</li>
+      <li><b>Delete something:</b> click it and press the delete key</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4">
+    <textarea id=debug_msg rows=10></textarea>
+    </td>
   </tr>
 </table>
 
