@@ -5,7 +5,7 @@ curr_dir := $(shell pwd)
 gui_docker_name := "rate_limiter_gui"
 mn_docker_name := "rate_limiter_mn"
 
-start-mn:
+start-mn: stop-mn
 	$(info *** Running topo.py Mininet topology)
 	docker run --privileged -it -d --rm --name ${mn_docker_name} \
 	-v ${curr_dir}/../../p4build/rate_limiter:/p4build \
@@ -50,7 +50,7 @@ attach-mininet:
 	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
 	@docker attach ${mn_docker_name}
 
-start-gui: build-p4
+start-gui: stop-gui build-p4
 	$(info *** Starting GUI Docker container...)
 	@docker run --rm -d --name ${gui_docker_name} \
 		-v ${curr_dir}/../../gui:/oppGui \
@@ -65,7 +65,7 @@ gui-log:
 
 stop-gui:
 	$(info *** Stopping GUI Docker container...)
-	@docker stop -t0 ${gui_docker_name}
+	@docker stop -t0 ${gui_docker_name} | true
 
 build-p4:
 	$(info *** Compiling Rate Limiter...)
