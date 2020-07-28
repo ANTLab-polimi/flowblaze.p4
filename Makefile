@@ -42,7 +42,6 @@ test_p4_json_parser:
 		-w /opp ${FLASK_IMG} \
 		sh -c 'cd ./gui && python p4_json_parser.py ../p4src/rate_limiter/rate_limiter.p4 ../p4src/rate_limiter/p4build/bmv2.json'
 
-
 gui-test:
 	docker run --rm --name test_gui \
 		-v ${curr_dir}/gui:/gui \
