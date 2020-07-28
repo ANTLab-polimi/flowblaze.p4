@@ -67,11 +67,8 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
     // -------------------------------- TABLE L2 FWD -------------------------------------------
     
-    action forward(bit<9> port, bit<9> asd, bit<9> eee) {
-    standard_metadata.egress_spec = asd;
-    standard_metadata.egress_spec = eee;
+    action forward(bit<9> port) {
       standard_metadata.egress_spec = port;
-
     }
 
     action _drop() {
