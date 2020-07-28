@@ -4,7 +4,7 @@ import json
 import logging
 import re
 
-from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, POSSIBLE_PACKET_ACTION, \
+from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, \
     TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, \
     TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL, \
     MAX_CONDITIONS_NUM, MAX_REG_ACTIONS_PER_TRANSITION, REG_ACTION_REGEX, COND_REGEX, \
@@ -255,23 +255,35 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
 
         edges.append(e)
 
+    # Order all the sets in order to have reproducible runs
+
     # Now Flow Variable will contain a dict with ID and the name of the variables
-    flow_data_variables = dict(enumerate(flow_data_variables))
+    fdv_list = list(flow_data_variables)
+    fdv_list.sort()
+    flow_data_variables = dict(enumerate(fdv_list))
     flow_data_variables_reverse = {v: k for k, v in flow_data_variables.items()}
     logger.debug("Reversed flow variables: {}".format(flow_data_variables_reverse))
 
-    global_data_variables = dict(enumerate(global_data_variables))
+    gdv_list = list(global_data_variables)
+    gdv_list.sort()
+    global_data_variables = dict(enumerate(gdv_list))
     global_data_variables_reverse = {v: k for k, v in global_data_variables.items()}
     logger.debug("Reversed global variables: {}".format(global_data_variables_reverse))
 
-    conditions = dict(enumerate(conditions))
+    conditions_list = list(conditions)
+    conditions_list.sort()
+    conditions = dict(enumerate(conditions_list))
     conditions_reverse = {v: k for k, v in conditions.items()}
     logger.debug("Reversed conditions: {}".format(conditions_reverse))
 
-    reg_actions = dict(enumerate(reg_actions))
+    reg_actions_list = list(reg_actions)
+    reg_actions_list.sort()
+    reg_actions = dict(enumerate(reg_actions_list))
     logger.debug("Actions on registers: {}".format(reg_actions))
 
-    pkt_actions = dict(enumerate(pkt_actions))
+    pkt_actions_list = list(pkt_actions)
+    pkt_actions_list.sort()
+    pkt_actions = dict(enumerate(pkt_actions_list))
     # k+1 is needed to differentiate a un-initialized metadata (that is 0) and an action (that has to be different from 0)
     pkt_actions_reverse = {v: k+1 for k, v in pkt_actions.items()}
     logger.debug("Reversed packet actions: {}".format(pkt_actions_reverse))
@@ -433,11 +445,11 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     lst_cond.sort(key=lambda x: x[0])
     cond_table_config = copy.deepcopy(TEMPLATE_SET_DEFAULT_condition_table)
     for cond in lst_cond:
-        cond_table_config += str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
-            cond[2]['operand1']) + ' ' + str(cond[2]['operand2']) + ' '
+        cond_table_config += ' ' + str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
+            cond[2]['operand1']) + ' ' + str(cond[2]['operand2'])
     # Fill-up the cond_table_config to have the 20 parameters required
     for _ in range(len(lst_cond), MAX_CONDITIONS_NUM):
-        cond_table_config += CONDITIONS["NOP"] + ' 0 0 0 0 '
+        cond_table_config += ' ' + CONDITIONS["NOP"] + ' 0 0 0 0'
     cli_config += cond_table_config +"\n"
     # --------------------------------------------------------------------------------------------------------------
 
@@ -527,6 +539,8 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
 
 
 if __name__ == '__main__':
+    EXAMPLE_PACKET_ACTION = ['_drop', 'NoAction', 'forward']
+    EXAMPLE_EFSM_MATCH_HEADER = ['hdr.ipv4.srcAddr', 'hdr.ipv4.dstAddr']
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', help='EFSM JSON as from the web gui', type=str, required=True)
     parser.add_argument('--output_file', help='Output file', type=str, required=True)
@@ -545,7 +559,7 @@ if __name__ == '__main__':
     with open(input_file, "r") as in_f:
         input_json = json.loads(in_f.read())
 
-    cli_config, dbg_msg = interpret_EFSM(json_str=input_json, packet_actions=POSSIBLE_PACKET_ACTION)
+    cli_config, dbg_msg = interpret_EFSM(json_str=input_json, packet_actions=EXAMPLE_PACKET_ACTION, efsm_match=EXAMPLE_EFSM_MATCH_HEADER)
     if not cli_config:
         logging.error("Failed to parse %s" % input_file)
     else:

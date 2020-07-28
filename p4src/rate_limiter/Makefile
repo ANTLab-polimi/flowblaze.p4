@@ -57,7 +57,7 @@ start-gui: stop-gui build-p4
 		-v ${curr_dir}/../../p4src:/p4src \
 		-p 8000:8000 \
 		-w /oppGui ${FLASK_IMG} \
-		/bin/sh -c 'python main_flask.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
+		/bin/sh -c 'python gui.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 
 gui-log:
