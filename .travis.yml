@@ -11,7 +11,7 @@ branches:
 jobs:
   include:
     - stage: test-gui
-      name: "Build Docker containers"
+      name: "Test GUI"
       script:
         - make deps
         - make gui-test
