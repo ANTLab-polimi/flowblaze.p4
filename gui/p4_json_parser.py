@@ -12,47 +12,28 @@ def parse_p4(p4_src_file):
     FLOW_HASH_FIELDS_REGEX = r'#define[ ]+FLOW_SCOPE[ ]+{(.*)}'
 
     EFSM_CONDITIONS_FIELD_str = list(filter(lambda x: 'METADATA_OPERATION_COND' in x, l))
-    if len(EFSM_CONDITIONS_FIELD_str) > 0:
-        EFSM_CONDITIONS_FIELD_str = EFSM_CONDITIONS_FIELD_str[0].strip()
-        m = re.search(HEADER_FIELD_EXTRACTOR_REGEX, EFSM_CONDITIONS_FIELD_str)
+    EFSM_CONDITIONS_FIELD = None
+    for cond_field in EFSM_CONDITIONS_FIELD_str:
+        m = re.search(HEADER_FIELD_EXTRACTOR_REGEX, cond_field.strip())
         if m:
             EFSM_CONDITIONS_FIELD = m.group(2)
-        else:
-            # empty METADATA_OPERATION_COND macro
-            EFSM_CONDITIONS_FIELD = None
-    else:
-        # missing METADATA_OPERATION_COND macro
-        EFSM_CONDITIONS_FIELD = None
+
 
     EFSM_MATCH_FIELDS_str = list(filter(lambda x: 'EFSM_MATCH_FIELDS' in x, l))
-    if len(EFSM_MATCH_FIELDS_str) > 0:
-        EFSM_MATCH_FIELDS_str = EFSM_MATCH_FIELDS_str[0].strip()
-        m = re.search(EFSM_MATCH_FIELDS_REGEX, EFSM_MATCH_FIELDS_str)
+    EFSM_MATCH_FIELDS = None
+    for efsm_match in EFSM_MATCH_FIELDS_str:
+        m = re.search(EFSM_MATCH_FIELDS_REGEX, efsm_match.strip())
         if m:
-            EFSM_MATCH_FIELDS_str = m.group(1)
             EFSM_MATCH_FIELDS = []
-            for f in EFSM_MATCH_FIELDS_str[:-1].split(';'):
-                EFSM_MATCH_FIELDS.append(f.split(':')[0].strip())
-        else:
-            # empty EFSM_MATCH_FIELDS macro
-            EFSM_MATCH_FIELDS = None
-    else:
-        # missing EFSM_MATCH_FIELDS macro
-        EFSM_MATCH_FIELDS = None
+            for fi in m.group(1)[:-1].split(';'):
+                EFSM_MATCH_FIELDS.append(fi.split(':')[0].strip())
 
     FLOW_HASH_FIELDS_REGEX_str = list(filter(lambda x: 'FLOW_SCOPE' in x, l))
-    if len(FLOW_HASH_FIELDS_REGEX_str) > 0:
-        FLOW_HASH_FIELDS_REGEX_str = FLOW_HASH_FIELDS_REGEX_str[0].strip()
-        m = re.search(FLOW_HASH_FIELDS_REGEX, FLOW_HASH_FIELDS_REGEX_str)
+    EFSM_LOOKUP_FIELDS = None
+    for flow_fields in FLOW_HASH_FIELDS_REGEX_str:
+        m = re.search(FLOW_HASH_FIELDS_REGEX, flow_fields.strip())
         if m:
-            FLOW_HASH_FIELDS_REGEX_str = m.group(1)
-            EFSM_LOOKUP_FIELDS = list(map(lambda x: x.strip(), FLOW_HASH_FIELDS_REGEX_str.split(',')))
-        else:
-            # empty FLOW_SCOPE macro
-            EFSM_LOOKUP_FIELDS = None
-    else:
-        # missing FLOW_SCOPE macro
-        EFSM_LOOKUP_FIELDS = None
+            EFSM_LOOKUP_FIELDS = list(map(lambda x: x.strip(), m.group(1).split(',')))
 
     return EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS
 
