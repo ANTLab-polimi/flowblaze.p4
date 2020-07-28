@@ -1,7 +1,8 @@
 import json
+import logging
 import re
 import sys
-import logging
+
 
 def parse_p4(p4_src_file):
     with open(p4_src_file) as f:
@@ -23,7 +24,7 @@ def parse_p4(p4_src_file):
     else:
         # missing METADATA_OPERATION_COND macro
         EFSM_CONDITIONS_FIELD = None
-
+    # TODO: parse also the type of match (exact, lpm, ternary ...)
     EFSM_MATCH_FIELDS_str = list(filter(lambda x: 'EFSM_MATCH_FIELDS' in x, l))
     if len(EFSM_MATCH_FIELDS_str) > 0:
         EFSM_MATCH_FIELDS_str = EFSM_MATCH_FIELDS_str[0].strip()
@@ -105,31 +106,6 @@ def parse_json(json_file):
     return GUI_match_fields, GUI_actions, GUI_actions_parameters
 
 
-def patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters, src='./www/index.html.template'):
-    with open(src, 'r') as f:
-        logging.info('Reading %s...' % src)
-        html = f.readlines()
-    idx = [i for i, line in enumerate(html) if '<option value="matchField">' in line]
-    if len(idx) > 0:
-        idx = idx[0]
-        for match_field in GUI_match_fields[::-1]:
-            html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (match_field, match_field))
-    else:
-        logging.error('Cannot find \'<option value="matchField">\' in %s' % src)
-        return None
-
-    idx = [i for i, line in enumerate(html) if '<option value="action">action</option>' in line]
-    if len(idx) > 0:
-        idx = idx[0]
-        for action in GUI_actions[::-1]:
-            action_str = '%s(%s)' % (action, ''.join(GUI_actions_parameters[action]))
-            html.insert(idx + 1, '    <option value="%s">%s</option>\n' % (action, action_str))
-    else:
-        logging.error('Cannot find \'<option value="action">action</option>\' in %s' % src)
-        return None
-    return "".join(html)
-
-
 def patch_config_py(actions, src='./config.py', dst='./config.py'):
     with open(src, 'r') as f:
         logging.info('Reading %s...' % src)
@@ -162,8 +138,7 @@ def parse_files(p4_file, json_file):
     logging.info('GUI_actions: %s' % GUI_actions)
     logging.info('GUI_actions_parameters: %s' % GUI_actions_parameters)
 
-    index_h = patch_index_html(GUI_match_fields, GUI_actions, GUI_actions_parameters)
-    return index_h, GUI_actions, EFSM_LOOKUP_FIELDS
+    return GUI_actions_parameters, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS, EFSM_CONDITIONS_FIELD
 
 
 if __name__ == "__main__":
@@ -172,9 +147,6 @@ if __name__ == "__main__":
 
     assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
 
-    index_html, GUI_actions, EFSM_lookup_fields = parse_files(sys.argv[1], sys.argv[2])
+    GUI_actions_parameters, _, _, _ = parse_files(sys.argv[1], sys.argv[2])
     # Patching files
-    patch_config_py(GUI_actions)
-    with open(current_index, 'w') as f:
-        logging.info('Patching %s...' % current_index)
-        f.writelines(index_html)
+    patch_config_py(list(GUI_actions_parameters.keys()))
