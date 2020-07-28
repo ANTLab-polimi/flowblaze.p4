@@ -466,10 +466,11 @@ control OPPLoop (inout headers hdr,
 
     UpdateLogic() update_logic;
     ConditionBlock() condition_block;
-
     apply {
-        // FIXME: is cast really necessary?
-        meta.opp_metadata.pkt_data = (bit<32>) (METADATA_OPERATION_COND & 0xFFFFFFFF);
+        #ifdef METADATA_OPERATION_COND
+            // FIXME: is cast really necessary?
+            meta.opp_metadata.pkt_data = (bit<32>) (METADATA_OPERATION_COND & 0xFFFFFFFF);
+        #endif
         context_lookup.apply();
         // TODO: FIND a way to implement in a clever way the condition block. It's a little bit messy and ugly like this
         condition_table.apply();
