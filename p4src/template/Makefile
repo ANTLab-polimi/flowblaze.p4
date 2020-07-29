@@ -17,39 +17,38 @@ start-mn: stop-mn
 stop-mn:
 	@docker stop -t0 ${mn_docker_name} | true
 
+attach-mininet:
+	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
+	@docker attach ${mn_docker_name}
+
+# Here some examples of some useful target you can modify for your specific Mininet topology
+
+# To load configuration to the BMv2 switch S1
 s1-load-config:
 	$(info *** Loading config on S1)
 	@docker exec -it ${mn_docker_name} /bin/sh -c 'simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) < /${project_name}/flowblaze_config.cli'
 	@docker exec -it ${mn_docker_name} /bin/sh -c 'simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) < /${project_name}/other_tables_config.cli'
 
+# To open LOG of BMv2 switch S1
 s1-log:
 	docker exec -it ${mn_docker_name} /bin/sh -c "tail -f /tmp/bmv2-s1-log"
 
+# To open CLI of BMv2 switch S1
 s1-CLI:
 	$(info *** Opening S1 Switch runtime CLI \(THRIFT\))
 	@docker exec -it ${mn_docker_name} /bin/sh -c 'simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port)'
 
+# To open shell of host H1
 h1-shell:
 	$(info *** Opening H1 shell)
 	@docker exec -it ${mn_docker_name} /mininet/util/m h1
 
-h1-test:
+# To ping from host h1
+h1-ping:
 	$(info *** Opening H1 shell and ping H2)
 	@echo 'ping 10.0.0.2 -c 12'
 	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "ping 10.0.0.2 -c 12 " | /mininet/util/m h1'
 
-h2-shell:
-	$(info *** Opening H2 shell)
-	@docker exec -it ${mn_docker_name} /mininet/util/m h2
-
-h2-test:
-	$(info *** Opening H2 shell and ping H1)
-	@echo 'ping 10.0.0.1 -c 12 '
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "ping 10.0.0.1 -c 12" | /mininet/util/m h2'
-
-attach-mininet:
-	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
-	@docker attach ${mn_docker_name}
 
 start-gui: stop-gui build-p4
 	$(info *** Starting GUI Docker container...)
@@ -58,7 +57,7 @@ start-gui: stop-gui build-p4
 		-v ${curr_dir}/../../p4src:/p4src \
 		-p 8000:8000 \
 		-w /flowblazeGui ${FLASK_IMG} \
-		/bin/sh -c 'python gui.py --p4_file /p4src/${project_name}/rate_limiter.p4 --json_file /p4src/${project_name}/p4build/bmv2.json'
+		/bin/sh -c 'python gui.py --p4_file /p4src/${project_name}/template.p4 --json_file /p4src/${project_name}/p4build/bmv2.json'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 
 gui-log:
@@ -75,7 +74,7 @@ build-p4:
 		p4c-bm2-ss --arch v1model -o ./${project_name}/p4build/bmv2.json \
 		--p4runtime-files ./${project_name}/p4build/p4info.txt,${project_name}/p4build/p4info.bin \
 		--Wdisable=unsupported \
-		./${project_name}/rate_limiter.p4
+		./${project_name}/template.p4
 	@echo "*** P4 program compiled successfully! Output files are in p4build"
 
 status:
