@@ -14,7 +14,7 @@ start-mn: stop-mn
 	${P4MN_IMG}
 
 stop-mn:
-	docker stop -t0 ${mn_docker_name}
+	@docker stop -t0 ${mn_docker_name} | true
 
 s1-load-config:
 	$(info *** Loading config $1 on S1)
