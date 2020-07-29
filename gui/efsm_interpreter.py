@@ -499,8 +499,8 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         if e['pkt_action']:
             tmp['pkt_action'] = pkt_actions_reverse[e['pkt_action']]
         else:
-            # The default 0 value for opp_metadata.pkt_action metadata triggers the execution of the default entry
-            # in the pkt_action table following the oppLoop
+            # The default 0 value for flowblaze_metadata.pkt_action metadata triggers the execution of the default entry
+            # in the pkt_action table following the flowblazeLoop
             tmp['pkt_action'] = 0
 
         # Set the packet header conditions

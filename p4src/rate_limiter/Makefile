@@ -53,10 +53,10 @@ attach-mininet:
 start-gui: stop-gui build-p4
 	$(info *** Starting GUI Docker container...)
 	@docker run --rm -d --name ${gui_docker_name} \
-		-v ${curr_dir}/../../gui:/oppGui \
+		-v ${curr_dir}/../../gui:/flowblazeGui \
 		-v ${curr_dir}/../../p4src:/p4src \
 		-p 8000:8000 \
-		-w /oppGui ${FLASK_IMG} \
+		-w /flowblazeGui ${FLASK_IMG} \
 		/bin/sh -c 'python gui.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 

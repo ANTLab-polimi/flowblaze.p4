@@ -66,7 +66,7 @@ def parse_json(json_file):
         # print('\tkeys:')
         for field in table['key']:
             # print('\t\t' + field['name'])
-            if table['name'] == 'ingress.oppLoop.EFSM_table' and 'meta.opp_metadata.' not in field['name']:
+            if table['name'] == 'ingress.flowblazeLoop.EFSM_table' and 'meta.flowblaze_metadata.' not in field['name']:
                 GUI_match_fields.append(field['name'])
         # print('\tactions')
         for action in table['actions']:

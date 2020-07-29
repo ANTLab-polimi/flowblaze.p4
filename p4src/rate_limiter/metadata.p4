@@ -4,7 +4,7 @@
 struct metadata_t {
     bit<16> tcpLength;
     bit<16> applLength;
-    OPP_t opp_metadata;
+    flowblaze_t flowblaze_metadata;
 }
 
 #endif

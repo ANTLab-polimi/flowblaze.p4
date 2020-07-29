@@ -2,7 +2,7 @@
 #include <v1model.p4>
 
 
-################################################## OPP PARAMETERS ##################################################
+################################################## FLOWBLAZE PARAMETERS ##################################################
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
 #define METADATA_OPERATION_COND (bit<32>) meta.applLength
@@ -10,10 +10,10 @@
 #define CONTEXT_TABLE_SIZE 1024
 ####################################################################################################################
 
-#include "../opp_p4_lib/OPP_metadata.p4"
+#include "../flowblaze_lib/flowblaze_metadata.p4"
 #include "headers.p4"
 #include "metadata.p4"
-#include "../opp_p4_lib/OPP_loop.p4"
+#include "../flowblaze_lib/flowblaze_loop.p4"
 
 
 // Needed in case you want to use it with ONOS
@@ -97,7 +97,7 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
     direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
     table pkt_action {
       key = {
-          meta.opp_metadata.pkt_action : ternary;
+          meta.flowblaze_metadata.pkt_action : ternary;
       }
       actions = {
         forward;
@@ -111,11 +111,11 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
     // ----------------------------------------------------------------------------------------
 
 
-    OPPLoop() oppLoop;
+    FlowBlazeLoop() flowblazeLoop;
 
     apply {
         if (hdr.ethernet.isValid()) {
-            oppLoop.apply(hdr, meta, standard_metadata);
+            flowblazeLoop.apply(hdr, meta, standard_metadata);
             pkt_action.apply();
             // pkt_action can only decide to drop the packet!
             t_l2_fwd.apply();
