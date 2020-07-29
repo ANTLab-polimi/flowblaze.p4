@@ -2,12 +2,20 @@
 #include <v1model.p4>
 
 
-################################################## FLOWBLAZE PARAMETERS ##################################################
+################################################## FLOWBLAZE PARAMETERS #############################################
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
 #define METADATA_OPERATION_COND (bit<32>) meta.applLength
 #define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
 #define CONTEXT_TABLE_SIZE 1024
+#define CUSTOM_ACTIONS_DEFINITION action forward(bit<9> port) { \
+                                    standard_metadata.egress_spec = port; \
+                                  } \
+                                  action drop() { \
+                                    mark_to_drop(standard_metadata); \
+                                    exit; \
+                                  }
+#define CUSTOM_ACTIONS_DECLARATION forward; drop;
 ####################################################################################################################
 
 #include "../flowblaze_lib/flowblaze_metadata.p4"
@@ -67,11 +75,11 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
     // -------------------------------- TABLE L2 FWD -------------------------------------------
     
-    action forward(bit<9> port) {
+    action main_forward(bit<9> port) {
       standard_metadata.egress_spec = port;
     }
 
-    action _drop() {
+    action main_drop() {
       mark_to_drop(standard_metadata);
       exit;
     }
@@ -85,39 +93,19 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
             hdr.ethernet.etherType         : ternary;
         }
         actions = {
-            forward;
-            _drop;
+            main_forward;
+            main_drop;
             NoAction;
         }
         default_action = NoAction();
         counters = l2_fwd_counter;
     }
 
-    // ----------------------------- ARBITRAY USER DEFINED ACTIONS -----------------------------
-    direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
-    table pkt_action {
-      key = {
-          meta.flowblaze_metadata.pkt_action : ternary;
-      }
-      actions = {
-        forward;
-        _drop;
-        NoAction;
-      }
-      default_action = NoAction();
-      counters = pkt_action_counter;
-    }
-
-    // ----------------------------------------------------------------------------------------
-
-
     FlowBlazeLoop() flowblazeLoop;
 
     apply {
         if (hdr.ethernet.isValid()) {
             flowblazeLoop.apply(hdr, meta, standard_metadata);
-            pkt_action.apply();
-            // pkt_action can only decide to drop the packet!
             t_l2_fwd.apply();
         }
     }
