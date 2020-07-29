@@ -8,7 +8,7 @@ from efsm_interpreter import interpret_EFSM
 
 TEST_FILE = "examples/rate_limiter.json"
 TEST_CLI_CONFIG = "examples/rate_limiter_cli_config.cli"
-TEST_PACKET_ACTION = ['_drop', 'NoAction', 'forward']
+TEST_PACKET_ACTION = ['drop', 'NoAction', 'forward']
 TEST_EFSM_MATCH_HEADER = ['hdr.ipv4.srcAddr', 'hdr.ipv4.dstAddr']
 
 

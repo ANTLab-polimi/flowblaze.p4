@@ -71,14 +71,14 @@ def parse_json(json_file):
         # print('\tactions')
         for action in table['actions']:
             # print('\t\t' + action)
-            if table['name'] == 'ingress.pkt_action':
-                GUI_actions.append(action.replace('ingress.', ''))
+            if table['name'] == 'ingress.flowblazeLoop.pkt_action':
+                GUI_actions.append(action.replace('ingress.flowblazeLoop.', ''))
 
     GUI_actions_parameters = {'NoAction': []}
     for action in GUI_actions:
         if action == 'NoAction':
             continue
-        action_data = list(filter(lambda x: x['name'] == 'ingress.' + action, j['actions']))[0]
+        action_data = list(filter(lambda x: x['name'] == 'ingress.flowblazeLoop.' + action, j['actions']))[0]
         GUI_actions_parameters[action] = []
         for param in action_data['runtime_data']:
             GUI_actions_parameters[action].append(param['name'])
