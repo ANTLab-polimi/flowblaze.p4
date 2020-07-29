@@ -217,25 +217,25 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             return None, dbg_msg
         elif len(e['pkt_action']) == 1:
             e['pkt_action'] = e['pkt_action'][0]
-            pa = e['pkt_action']
-            if parse_pkt_action(pa):
+            pa = parse_pkt_action(e['pkt_action'])
+            if pa:
                 # TODO validate the number of parameters!
                 found = False
                 for possible_pa in packet_actions:
-                    if possible_pa in pa:
+                    if possible_pa == pa[0]:
                         found = True
-                        pkt_actions.add(pa)
+                        pkt_actions.add(e['pkt_action'])
                         break
                 if not found:
-                    logger.warning('Unrecognized packet action: "%s"' % pa)
+                    logger.warning('Unrecognized packet action: "%s"' % e['pkt_action'])
                     logger.warning(invalid_transition_str(e))
-                    dbg_msg += 'Unrecognized packet action: "%s"\n' % pa
+                    dbg_msg += 'Unrecognized packet action: "%s"\n' % e['pkt_action']
                     dbg_msg += invalid_transition_str(e) + '\n'
                     return None, dbg_msg
             else:
-                logger.warning('Cannot parse packet action: "%s"' % pa)
+                logger.warning('Cannot parse packet action: "%s"' % e['pkt_action'])
                 logger.warning(invalid_transition_str(e))
-                dbg_msg += 'Cannot parse packet action: "%s"\n' % pa
+                dbg_msg += 'Cannot parse packet action: "%s"\n' % e['pkt_action']
                 dbg_msg += invalid_transition_str(e) + '\n'
                 return None, dbg_msg
         else:
