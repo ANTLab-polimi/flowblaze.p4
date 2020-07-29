@@ -9,7 +9,7 @@ from flask import Flask, request, send_file, redirect, make_response, render_tem
 from efsm_interpreter import interpret_EFSM
 from p4_json_parser import parse_files
 
-app = Flask(__name__,  static_folder="www")
+app = Flask(__name__,  static_folder="www/static", template_folder="www/templates")
 
 
 @app.route('/')

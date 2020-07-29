@@ -16,7 +16,7 @@ start_gui_docker:
 		-v ${curr_dir}/p4src:/p4src \
 		-p 8000:8000 \
 		-w /oppGui ${FLASK_IMG} \
-		sh -c 'python main_flask.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
+		sh -c 'python gui.py --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 
 stop_gui_docker:
@@ -26,7 +26,7 @@ stop_gui_docker:
 start_gui_local:
 	$(info *** Starting GUI without Docker container...)
 	cd gui/; \
-	python3 main_flask.py --p4_file ../p4src/rate_limiter/rate_limiter.p4 --json_file ../p4src/rate_limiter/p4build/bmv2.json
+	python3 gui.py --p4_file ../p4src/rate_limiter/rate_limiter.p4 --json_file ../p4src/rate_limiter/p4build/bmv2.json
 
 test_efsm_interpreter:
 	$(info *** Running EFSM interpreter with rate_limiter JSON example...)
@@ -41,3 +41,9 @@ test_p4_json_parser:
 		-v ${curr_dir}/:/opp \
 		-w /opp ${FLASK_IMG} \
 		sh -c 'cd ./gui && python p4_json_parser.py ../p4src/rate_limiter/rate_limiter.p4 ../p4src/rate_limiter/p4build/bmv2.json'
+
+gui-test:
+	docker run --rm --name test_gui \
+		-v ${curr_dir}/gui:/gui \
+		-w /gui/tests ${FLASK_IMG} \
+		sh -c 'python -m unittest efsm_interpreter_test'

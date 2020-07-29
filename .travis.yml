@@ -1,0 +1,20 @@
+os: linux
+dist: trusty
+language: generic
+services:
+  - docker
+
+branches:
+  only:
+    - master
+
+jobs:
+  include:
+    - stage: test-gui
+      name: "Test GUI"
+      script:
+        - make deps
+        - make gui-test
+
+stages:
+  - check-build

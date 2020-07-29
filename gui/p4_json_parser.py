@@ -86,25 +86,6 @@ def parse_json(json_file):
     return GUI_match_fields, GUI_actions, GUI_actions_parameters
 
 
-def patch_config_py(actions, src='./config.py', dst='./config.py'):
-    with open(src, 'r') as f:
-        logging.info('Reading %s...' % src)
-        py = f.readlines()
-
-    idx = [i for i, line in enumerate(py) if 'POSSIBLE_PACKET_ACTION' in line]
-    if len(idx) > 0:
-        idx = idx[0]
-        del py[idx]
-        py.insert(idx, 'POSSIBLE_PACKET_ACTION = %s\n' % actions)
-    else:
-        logging.warning('Cannot find POSSIBLE_PACKET_ACTION in \'%s\'. Patching at the end of the file...' % src)
-        py.append('POSSIBLE_PACKET_ACTION = %s\n' % actions)
-
-    with open(dst, 'w') as f:
-        logging.info('Patching %s...' % dst)
-        f.writelines(py)
-
-
 def parse_files(p4_file, json_file):
     # TODO keeping both EFSM_MATCH_FIELDS and GUI_match_fields is redundant...
     EFSM_CONDITIONS_FIELD, EFSM_MATCH_FIELDS, EFSM_LOOKUP_FIELDS = parse_p4(p4_file)
@@ -128,5 +109,3 @@ if __name__ == "__main__":
     assert len(sys.argv) == 3, 'Required args: [P4_file] [JSON_file]'
 
     GUI_actions_parameters, _, _, _ = parse_files(sys.argv[1], sys.argv[2])
-    # Patching files
-    patch_config_py(list(GUI_actions_parameters.keys()))
