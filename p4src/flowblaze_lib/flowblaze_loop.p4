@@ -308,7 +308,7 @@ control UpdateLogic(inout headers hdr,
 control FlowBlazeLoop (inout headers hdr,
                  //inout flowblaze_t flowblaze_metadata,
                  inout metadata_t meta,
-                 in standard_metadata_t standard_metadata){
+                 inout standard_metadata_t standard_metadata){
     
     // ------------------------ EFSM TABLE -----------------------------
     action define_operation_update_state(bit<16> state,
@@ -364,7 +364,9 @@ control FlowBlazeLoop (inout headers hdr,
             meta.flowblaze_metadata.c1                   : ternary;
             meta.flowblaze_metadata.c2                   : ternary;
             meta.flowblaze_metadata.c3                   : ternary;
-            EFSM_MATCH_FIELDS
+            #ifdef EFSM_MATCH_FIELDS
+                EFSM_MATCH_FIELDS
+            #endif
         }
         default_action = NoAction;
         counters = EFSM_table_counter;
@@ -461,6 +463,28 @@ control FlowBlazeLoop (inout headers hdr,
         counters = condition_table_counter;
     }
 
+    #ifdef CUSTOM_ACTIONS_DEFINITION
+        CUSTOM_ACTIONS_DEFINITION
+    #endif
+
+    direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
+
+    table pkt_action {
+        key = {
+            // TODO: we can use exact match instead of ternary
+            meta.flowblaze_metadata.pkt_action : ternary;
+        }
+        actions = {
+            #ifdef CUSTOM_ACTIONS_DECLARATION
+                CUSTOM_ACTIONS_DECLARATION
+            #endif
+            NoAction;
+        }
+        // Keep NoAction as default action
+        default_action = NoAction();
+        counters = pkt_action_counter;
+    }
+
     // --------------------------------------------------------------------------
 
 
@@ -488,6 +512,8 @@ control FlowBlazeLoop (inout headers hdr,
         EFSM_table.apply();
         update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_0, standard_metadata);
         update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_1, standard_metadata);
+
+        pkt_action.apply();
 
     }
 

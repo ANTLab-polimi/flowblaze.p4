@@ -1,7 +1,7 @@
 #ifndef _FLOWBLAZE_METADATA_
 #define _FLOWBLAZE_METADATA_
 
-# This file container the custom metadata needed for the FlowBlaze Loop to work
+# This file contains the custom metadata needed for FlowBlaze to work
 
 struct flowblaze_single_update_t {
     bit<8>  operation;
