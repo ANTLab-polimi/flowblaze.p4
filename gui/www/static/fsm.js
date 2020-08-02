@@ -509,6 +509,19 @@ window.onload = function() {
 			draw();
 		}
 	};
+
+	document.getElementById('fileinput').onchange = function(evt) {
+		try {
+			let files = evt.target.files;
+			if (!files.length) {
+				alert('No file selected!');
+			return;
+			}
+			loadFileIntoLocalStorage();
+		} catch (err) {
+		console.error(err);
+		}
+	}
 }
 
 var shift = false;

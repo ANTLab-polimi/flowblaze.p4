@@ -286,3 +286,47 @@ function loadSampleFSMcount(){
   localStorage['fsm'] = '{"nodes":[{"x":118,"y":168,"text":"0","isAcceptState":false},{"x":331,"y":168,"text":"count","isAcceptState":false},{"x":594,"y":168,"text":"block","isAcceptState":false}],"links":[{"type":"Link","nodeA":0,"nodeB":1,"text":" |  | pkt = 1 | forward(1)","lineAngleAdjust":0,"parallelPart":0.5233644859813084,"perpendicularPart":-59},{"type":"Link","nodeA":1,"nodeB":2,"text":" | pkt > 10 |  | drop()","lineAngleAdjust":3.141592653589793,"parallelPart":0.5295658538464503,"perpendicularPart":-58.19084654409617},{"type":"SelfLink","node":2,"text":" |  |  | drop()","anchorAngle":1.5707963267948966},{"type":"SelfLink","node":1,"text":" | pkt <= 10 | pkt = pkt + 1 | forward(1)","anchorAngle":1.5707963267948966}]}';
   location.reload();
 }
+
+function loadFSM(){
+  localStorage.clear();
+  document.getElementById('fileinput').dispatchEvent(new MouseEvent('click'));
+  //fileinput's onchange event have been registered in fsm.js's window.onload
+}
+
+function saveFSM(){
+  var blob = new Blob([localStorage['fsm']], {type: 'text/json'});
+  saveBlob(blob, 'FSM.json');
+}
+
+function loadFileIntoLocalStorage() {
+  //https://stackoverflow.com/a/21446426
+  var input, file, fr;
+
+  if (typeof window.FileReader !== 'function') {
+    alert("The file API isn't supported on this browser yet.");
+    return;
+  }
+
+  input = document.getElementById('fileinput');
+  if (!input) {
+    alert("Um, couldn't find the fileinput element.");
+  }
+  else if (!input.files) {
+    alert("This browser doesn't seem to support the `files` property of file inputs.");
+  }
+  else if (!input.files[0]) {
+    alert("Please select a file before clicking 'Load'");
+  }
+  else {
+    file = input.files[0];
+    fr = new FileReader();
+    fr.onload = receivedText;
+    fr.readAsText(file);
+  }
+
+  function receivedText(e) {
+    let lines = e.target.result;
+    localStorage['fsm'] = lines;
+    location.reload();
+  }
+}
