@@ -18,42 +18,34 @@ div {
     width: 1024px;
 }
 
+.baseDiv {
+    border-style: dotted;
+    border-width: 1px;
+    margin-right: 4px;
+    padding: 2px;
+    cursor: not-allowed;
+}
+
 .matchDiv {
-background-color: rgba(255, 0, 0, 0.2);
-border-style: dotted;
-border-width: 1px;
-margin-right: 4px;
-padding: 2px;
+    background-color: rgba(255, 0, 0, 0.2);
 }
 
 .conditionDiv {
-background-color: rgba(0, 0, 255, 0.2);
-border-style: dotted;
-border-width: 1px;
-margin-right: 4px;
-padding: 2px;
+    background-color: rgba(0, 0, 255, 0.2);
 }
 
 .updateDiv {
-background-color: rgba(0, 255, 255, 0.2);
-border-style: dotted;
-border-width: 1px;
-margin-right: 4px;
-padding: 2px;
+    background-color: rgba(0, 255, 255, 0.2);
 }
 
 .actionDiv {
-background-color: rgba(0, 255, 0, 0.2);
-border-style: dotted;
-border-width: 1px;
-margin-right: 4px;
-padding: 2px;
+    background-color: rgba(0, 255, 0, 0.2);
 }
 
 .balloon-wrapper {
-  display: inline-block;
- margin:  0px;
- padding: 0px;
+    display: inline-block;
+    margin:  0px;
+    padding: 0px;
 }
 
 .button {

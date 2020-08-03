@@ -40,7 +40,9 @@ function addMatch(){
   var input = document.createElement("label");
   input.value = matchFieldText + " == " + matchValueText;
   input.innerHTML = matchFieldText + " == " + matchValueText;
-  input.className = "matchDiv";
+  input.className = "matchDiv baseDiv";
+  input.onclick = function() { this.remove(); };
+  input.title = "Click to remove";
   match.appendChild(input);
   // clear match
   matchField.selectedIndex = 0;
@@ -80,7 +82,9 @@ function addCondition(){
   var input = document.createElement("label");
   input.value = condOperand1Text + " " + conditionOperatorText + " " + condOperand2Text;
   input.innerHTML = escapeHtml(condOperand1Text + " " + conditionOperatorText + " " + condOperand2Text);
-  input.className = "conditionDiv";
+  input.className = "conditionDiv baseDiv";
+  input.onclick = function() { this.remove(); };
+  input.title = "Click to remove";
   condition.appendChild(input);
   // clear condition
   conditionOperator.selectedIndex = 0;
@@ -96,33 +100,38 @@ function addUpdate(){
   var updateOutputText = document.getElementById("updateOutput").value.trim();
   var updateOperand1Text = document.getElementById("updateOperand1").value.trim();
   var updateOperand2Text = document.getElementById("updateOperand2").value.trim();
-  if (updateOperation.selectedIndex == 0 && updateOperand2Text.length > 0) {
-    alert("Please select an operator!");
-    return;
-  }
-  if (document.getElementById("updateOutput").value == "") {
+  if (updateOutputText.length == 0) {
     alert("Please insert a non-empty output!")
-    return;
-  }
-  if (updateOperand1Text.length == 0) {
-    alert("Please insert a non-empty operand 1!")
-    return;
-  }
-  if (updateOperand2Text.length == 0 && updateOperation.selectedIndex > 0) {
-    alert("Please insert a non-empty operand 2!")
     return;
   }
   if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOutputText)) {
     alert("Invalid output!")
     return;
   }
+
+  if (updateOperand1Text.length == 0) {
+    alert("Please insert a non-empty operand 1!")
+    return;
+  }
   if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOperand1Text)) {
     alert("Invalid operand1!")
     return;
   }
-  if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOperand2Text)) {
-    alert("Invalid operand2!")
+
+  // update operand 2 is optional: if no operation is selected we admit an empty value
+  if (updateOperation.selectedIndex == 0 && updateOperand2Text.length > 0) {
+    alert("Please select an operator!");
     return;
+  }
+  if (updateOperation.selectedIndex > 0) {
+    if (updateOperand2Text.length == 0) {
+      alert("Please insert a non-empty operand 2!")
+      return;
+    }
+    if (!matchesRegex("[#@]{0,1}[0-9a-zA-Z_-]+", updateOperand2Text)) {
+      alert("Invalid operand2!")
+      return;
+    }
   }
 
   var condition = document.getElementById("updateList");
@@ -136,7 +145,9 @@ function addUpdate(){
     input.innerHTML = document.getElementById("updateOutput").value + " = " + updateOperand1Text + " " + updateOperationText + " " + updateOperand2Text;
   }
 
-  input.className = "updateDiv";
+  input.className = "updateDiv baseDiv";
+  input.onclick = function() { this.remove(); };
+  input.title = "Click to remove";
   condition.appendChild(input);
   // clear update
   updateOperation.selectedIndex = 0;
@@ -176,7 +187,9 @@ function setAction(){
   var input = document.createElement("label");
   input.value = document.getElementById("action").value + "(" + actionParamText + ")";
   input.innerHTML = document.getElementById("action").value + "(" + actionParamText + ")";
-  input.className = "actionDiv";
+  input.className = "actionDiv baseDiv";
+  input.onclick = function() { this.remove(); };
+  input.title = "Click to remove";
   actionList.appendChild(input);
   // clear update
   action.selectedIndex = 0;
