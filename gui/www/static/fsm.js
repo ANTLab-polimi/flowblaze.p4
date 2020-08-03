@@ -317,7 +317,38 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
 	} else {
 		x = Math.round(x);
 		y = Math.round(y);
-		c.fillText(text, x, y + 6);
+		if (text.includes('|')){
+			var splitted = text.split('|');
+			var x2 = x;
+			for (var i = 0; i < splitted.length; i++) {
+				c.fillStyle = transitionColors[i];
+				c.fillText(splitted[i].trim(), x2, y + 6);
+				x2 += c.measureText(splitted[i].trim()).width;
+				c.fillStyle = "black";
+
+				if (i == 0){
+					//match
+					if (splitted[0].trim().length > 0 && splitted[1].trim().length > 0){
+						c.fillText(' ; ', x2, y + 6);
+						x2 += c.measureText(' ; ').width;
+					}
+				} else if (i == 1){
+					//condition
+					if ((splitted[0].trim().length > 0 || splitted[1].trim().length > 0) && (splitted[2].trim().length > 0 || splitted[3].trim().length > 0)){
+						c.fillText(' 🡆 ', x2, y + 6);
+						x2 += c.measureText(' 🡆 ').width;
+					}
+				} else if (i == 2){
+					//update action
+					if (splitted[2].trim().length > 0 && splitted[3].trim().length > 0){
+						c.fillText(' ; ', x2, y + 6);
+						x2 += c.measureText(' ; ').width;
+					}
+				}
+			}
+		} else {
+			c.fillText(text, x, y + 6);
+		}
 		if(isSelected && caretVisible && canvasHasFocus() && document.hasFocus()) {
 			x += width;
 			c.beginPath();
@@ -349,6 +380,8 @@ var selectedObject = null; // either a Link or a Node
 var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
+
+const transitionColors = ["#ff0000", "#7171ff", "#00a0fdb8", "#3ec547"];
 
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);
