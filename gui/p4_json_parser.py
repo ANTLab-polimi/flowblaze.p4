@@ -66,19 +66,19 @@ def parse_json(json_file):
         # print('\tkeys:')
         for field in table['key']:
             # print('\t\t' + field['name'])
-            if table['name'] == 'ingress.flowblazeLoop.EFSM_table' and 'meta.flowblaze_metadata.' not in field['name']:
+            if table['name'] == 'ingress.FlowBlazeLoop.EFSM_table' and 'meta.flowblaze_metadata.' not in field['name']:
                 GUI_match_fields.append(field['name'])
         # print('\tactions')
         for action in table['actions']:
             # print('\t\t' + action)
-            if table['name'] == 'ingress.flowblazeLoop.pkt_action':
-                GUI_actions.append(action.replace('ingress.flowblazeLoop.', ''))
+            if table['name'] == 'ingress.FlowBlazeLoop.pkt_action':
+                GUI_actions.append(action.replace('ingress.FlowBlazeLoop.', ''))
 
     GUI_actions_parameters = {'NoAction': []}
     for action in GUI_actions:
         if action == 'NoAction':
             continue
-        action_data = list(filter(lambda x: x['name'] == 'ingress.flowblazeLoop.' + action, j['actions']))[0]
+        action_data = list(filter(lambda x: x['name'] == 'ingress.FlowBlazeLoop.' + action, j['actions']))[0]
         GUI_actions_parameters[action] = []
         for param in action_data['runtime_data']:
             GUI_actions_parameters[action].append(param['name'])

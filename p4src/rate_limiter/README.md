@@ -28,7 +28,7 @@ Run the `ping` test:
 ```bash
 make h1-test
 ```
-The ping should fail after 11 successful pings.
+The ping should fail after 10 successful pings.
 
 You can start the switch log with: `make s1-log` and interact with the BMv2 Thrift CLI with `make s1-CLI`.
 
