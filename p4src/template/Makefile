@@ -6,6 +6,9 @@ project_name := $(shell basename "${curr_dir}")
 gui_docker_name := "${project_name}_gui"
 mn_docker_name := "${project_name}_mn"
 
+clear: stop-mn stop-gui
+	rm -rf ./p4build
+
 start-mn: stop-mn
 	$(info *** Running topo.py Mininet topology)
 	docker run --privileged -it -d --rm --name ${mn_docker_name} \
@@ -37,6 +40,32 @@ s1-log:
 s1-CLI:
 	$(info *** Opening S1 Switch runtime CLI \(THRIFT\))
 	@docker exec -it ${mn_docker_name} /bin/sh -c 'simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port)'
+
+# To clear register of BMv2 switch S1
+s1-clear-reg:
+	$(info *** Clear registers for S1)
+	@echo "    reg_state"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_state" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    reg_R0"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_R0" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    reg_R1"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_R1" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    reg_R2"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_R2" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    reg_R3"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_R3" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    reg_G"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "register_reset reg_G" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+
+# To clear the FlowBlaze tables of BMv2 switch S1
+s1-clear-flowblaze:
+	$(info *** Clear FlowBlaze state for S1)
+	@echo "    EFSM Table"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear ingress.FlowBlazeLoop.EFSM_table" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    Condition Table"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_set_default ingress.FlowBlazeLoop.condition_table NoAction" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@echo "    Packet Action"
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear ingress.FlowBlazeLoop.pkt_action" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
 
 # To open shell of host H1
 h1-shell:
