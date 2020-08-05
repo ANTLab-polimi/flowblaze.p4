@@ -30,6 +30,8 @@ make h1-test
 ```
 The ping should fail after 10 successful pings.
 
+[![asciicast](https://asciinema.org/a/xBtEKVKO5gs5ZZfGDz9qLVd9l.svg)](https://asciinema.org/a/xBtEKVKO5gs5ZZfGDz9qLVd9l)
+
 You can start the switch log with: `make s1-log` and interact with the BMv2 Thrift CLI with `make s1-CLI`.
 
 You can find more `make` target to interact with the dockerized mininet in the `Makefile`.
