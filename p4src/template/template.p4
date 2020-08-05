@@ -27,12 +27,9 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
    // Define your ingress processing
 
-    // Define the flowblazeLoop that has to be invoked in the apply block
-    FlowBlazeLoop() flowblazeLoop;
-
     apply {
         // Invoke FlowBlaze machine
-        flowblazeLoop.apply(hdr, meta, standard_metadata);
+        FlowBlazeLoop.apply(hdr, meta, standard_metadata);
     }
 }
 

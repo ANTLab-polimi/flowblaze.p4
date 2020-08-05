@@ -101,11 +101,9 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
         counters = l2_fwd_counter;
     }
 
-    FlowBlazeLoop() flowblazeLoop;
-
     apply {
         if (hdr.ethernet.isValid()) {
-            flowblazeLoop.apply(hdr, meta, standard_metadata);
+            FlowBlazeLoop.apply(hdr, meta, standard_metadata);
             t_l2_fwd.apply();
         }
     }
