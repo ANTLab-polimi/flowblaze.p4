@@ -12,7 +12,7 @@ make deps
 
 ## FlowBlaze examples
 ### Packet Limiter
-**Go to [Packet Limiter](./p4src/packet_limiter/README.md)**
+**Go to [Packet Limiter](p4src/packet_limiter/docs/README.md)**
 
 ## TODOs
 ### FlowBlaze.p4:
