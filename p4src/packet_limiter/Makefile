@@ -18,6 +18,7 @@ start-mn: stop-mn
 	${P4MN_IMG}
 
 stop-mn:
+	$(info *** Stopping Mininet)
 	@docker stop -t0 ${mn_docker_name} | true
 
 s1-load-config:
