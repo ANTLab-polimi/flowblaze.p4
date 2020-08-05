@@ -15,7 +15,7 @@ h2 = net.addHost('h2', cls=P4Host, ip='10.0.0.2', mac="00:00:00:00:00:02")
 
 # SWITCHES
 info('*** Adding switches\n')
-s1 = net.addSwitch(name='s1', loglevel='debug', json="/rate_limiter/p4build/bmv2.json", pktdump=False)
+s1 = net.addSwitch(name='s1', loglevel='debug', json="/packet_limiter/p4build/bmv2.json", pktdump=False)
 
 # LINKS
 info('*** Creating links\n')
