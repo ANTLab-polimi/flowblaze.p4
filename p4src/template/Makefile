@@ -76,7 +76,7 @@ h1-shell:
 h1-ping:
 	$(info *** Opening H1 shell and ping H2)
 	@echo 'ping 10.0.0.2 -c 12'
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "ping 10.0.0.2 -c 12 " | /mininet/util/m h1'
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/mininet/util/m h1 ping 10.0.0.2 -c 12'
 
 
 start-gui: stop-gui build-p4

@@ -96,7 +96,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     reg_actions = set()
     pkt_actions = set()
 
-    no_efsm_matches = ["0&&&0" for _ in efsm_match]
+    no_efsm_matches = ["0&&&0" for _ in efsm_match] if efsm_match else []
 
     # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
     for link in links:

@@ -5,17 +5,18 @@
 ################################################## FLOWBLAZE PARAMETERS #############################################
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
-#define METADATA_OPERATION_COND (bit<32>) meta.applLength
-#define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary; hdr.ipv4.dstAddr: ternary;
-#define CONTEXT_TABLE_SIZE 1024
-#define CUSTOM_ACTIONS_DEFINITION action forward(bit<9> port) { \
-                                    standard_metadata.egress_spec = port; \
+#define CUSTOM_ACTIONS_DEFINITION action forward() { \
+                                    \
                                   } \
                                   action drop() { \
                                     mark_to_drop(standard_metadata); \
                                     exit; \
                                   }
 #define CUSTOM_ACTIONS_DECLARATION forward; drop;
+// Configuration parameter left black because not needed
+//    #define METADATA_OPERATION_COND
+//    #define EFSM_MATCH_FIELDS
+//    #define CONTEXT_TABLE_SIZE
 ####################################################################################################################
 
 #include "../flowblaze_lib/flowblaze_metadata.p4"
