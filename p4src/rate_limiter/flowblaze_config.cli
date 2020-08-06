@@ -1,0 +1,9 @@
+table_set_default ingress.FlowBlazeLoop.condition_table set_condition_fields 0b101 0x00 0xFF 0 800000 0b010 0x00 0xFF 0 800000 0b100 0x01 0xF2 0 0 0b011 0x01 0xF2 0 0
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 0&&&0xFFFF 0&&&0 0&&&0 0&&&0 0&&&0  => 1 0x01 0x00 0xF1 0xFF 0 0 0x01 0x01 0xF2 0xFF 0 5000000 2 1
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 1&&&1 0&&&0 0&&&0 1&&&1  => 1 0x01 0x00 0x00 0xF1 0 0 0x00 0 0 0 0 0 2 1
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 0&&&0 0&&&0 1&&&1 0&&&0  => 1 0x01 0x00 0xF1 0xFF 0 0 0x01 0x01 0xF2 0xFF 0 5000000 2 1
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 0&&&0 1&&&1 0&&&0 1&&&1  => 2 0x00 0 0 0 0 0 0x00 0 0 0 0 0 1 1
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 2&&&0xFFFF 0&&&0 0&&&0 0&&&0 1&&&1  => 2 0x00 0 0 0 0 0 0x00 0 0 0 0 0 1 1
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 2&&&0xFFFF 0&&&0 0&&&0 1&&&1 0&&&0  => 1 0x01 0x00 0xF1 0xFF 0 0 0x01 0x01 0xF2 0xFF 0 5000000 2 1
+table_add ingress.FlowBlazeLoop.pkt_action drop 0x1&&&0xFF =>  10
+table_add ingress.FlowBlazeLoop.pkt_action forward 0x2&&&0xFF =>  10
