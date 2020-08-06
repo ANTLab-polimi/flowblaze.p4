@@ -66,7 +66,7 @@ h1-shell:
 h1-test:
 	$(info *** Opening H1 shell and ping H2)
 	@echo 'ping 10.0.0.2 -c 12'
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "ping 10.0.0.2 -c 12 " | /mininet/util/m h1'
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/mininet/util/m h1 ping 10.0.0.2 -c 12'
 
 h2-shell:
 	$(info *** Opening H2 shell)
@@ -75,7 +75,7 @@ h2-shell:
 h2-test:
 	$(info *** Opening H2 shell and ping H1)
 	@echo 'ping 10.0.0.1 -c 12 '
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "ping 10.0.0.1 -c 12" | /mininet/util/m h2'
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/mininet/util/m h2 ping 10.0.0.1 -c 12'
 
 attach-mininet:
 	$(info ******* To detach CTRL+P followed by CTRL+Q *******)

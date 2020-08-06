@@ -29,6 +29,9 @@
 #define CONDITION_LT    0b100
 #define CONDITION_LTE   0b101
 
+#ifndef CONTEXT_TABLE_SIZE
+    #define CONTEXT_TABLE_SIZE 2014
+#endif
 /*
 * TODO:
 *  - Timeouts are not implemented 

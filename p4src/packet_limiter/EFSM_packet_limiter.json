@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "x": 118,
+      "y": 168,
+      "text": "0",
+      "isAcceptState": false
+    },
+    {
+      "x": 331,
+      "y": 168,
+      "text": "count",
+      "isAcceptState": false
+    },
+    {
+      "x": 594,
+      "y": 168,
+      "text": "block",
+      "isAcceptState": false
+    }
+  ],
+  "links": [
+    {
+      "type": "Link",
+      "nodeA": 0,
+      "nodeB": 1,
+      "text": " |  | pkt = 1 | forward()",
+      "lineAngleAdjust": 0,
+      "parallelPart": 0.5233644859813084,
+      "perpendicularPart": -59
+    },
+    {
+      "type": "Link",
+      "nodeA": 1,
+      "nodeB": 2,
+      "text": " | pkt >= 10 |  | drop()",
+      "lineAngleAdjust": 3.141592653589793,
+      "parallelPart": 0.5295658538464503,
+      "perpendicularPart": -58.19084654409617
+    },
+    {
+      "type": "SelfLink",
+      "node": 2,
+      "text": " |  |  | drop()",
+      "anchorAngle": 1.5707963267948966
+    },
+    {
+      "type": "SelfLink",
+      "node": 1,
+      "text": " | pkt < 10 | pkt = pkt + 1 | forward()",
+      "anchorAngle": 1.5707963267948966
+    }
+  ]
+}
