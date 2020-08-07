@@ -15,6 +15,18 @@ jobs:
       script:
         - make deps
         - make gui-test
+    - stage: packet_limiter
+      name: "Packet Limiter P4 build"
+        - make deps
+        - cd p4src/packet_limiter
+        - make build-p4
+    - stage: rate_limiter
+       name: "Rate Limiter P4 build"
+        - make deps
+        - cd p4src/rate_limiter
+        - make build-p4
 
 stages:
-  - check-build
+  - test-gui
+  - packet_limiter
+  - rate_limiter
