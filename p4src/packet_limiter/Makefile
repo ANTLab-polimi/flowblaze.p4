@@ -99,7 +99,7 @@ stop-gui:
 	@docker stop -t0 ${gui_docker_name} | true
 
 build-p4:
-	$(info *** Compiling Rate Limiter...)
+	@echo "*** Compiling ${project_name}..."
 	@mkdir -p ./p4build
 	@docker run --rm -v ${curr_dir}/../:/p4src -w /p4src ${P4C_IMG} \
 		p4c-bm2-ss --arch v1model -o ./${project_name}/p4build/bmv2.json \

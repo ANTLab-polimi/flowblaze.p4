@@ -5,7 +5,7 @@
 ################################################## FLOWBLAZE PARAMETERS #############################################
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
-#define METADATA_OPERATION_COND (bit<32>) meta.applLength
+#define METADATA_OPERATION_COND (bit<32>) meta.l4Length
 #define CUSTOM_ACTIONS_DEFINITION action forward() { \
                                     \
                                   } \
@@ -47,7 +47,7 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata_t meta, inou
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
-        meta.tcpLength = hdr.ipv4.totalLen - 16w20;
+        meta.l4Length = hdr.ipv4.totalLen - 16w20;
         transition select(hdr.ipv4.protocol) {
             IP_TYPE_TCP:    parse_tcp;
             IP_TYPE_UDP:    parse_udp;
@@ -57,13 +57,11 @@ parser ParserImpl(packet_in packet, out headers hdr, inout metadata_t meta, inou
 
     state parse_tcp {
         packet.extract(hdr.tcp);
-        meta.applLength = hdr.ipv4.totalLen - 16w40;
         transition accept;
     }
 
     state parse_udp {
         packet.extract(hdr.udp);
-        meta.applLength = meta.tcpLength - 16w28;
         transition accept;
     }
 
@@ -167,7 +165,7 @@ control computeChecksum(inout headers hdr, inout metadata_t meta) {
               hdr.ipv4.dstAddr, 
               8w0, 
               hdr.ipv4.protocol, 
-              meta.tcpLength, 
+              meta.l4Length,
               hdr.tcp.srcPort, 
               hdr.tcp.dstPort, 
               hdr.tcp.seqNo, 
