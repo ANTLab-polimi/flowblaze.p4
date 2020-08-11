@@ -328,6 +328,12 @@ control FlowBlazeLoop (inout headers hdr,
                                          bit<8> op2_1, 
                                          bit<32> operand1_1, 
                                          bit<32> operand2_1,
+                                         bit<8> operation_2,
+                                         bit<8> result_2,
+                                         bit<8> op1_2,
+                                         bit<8> op2_2,
+                                         bit<32> operand1_2,
+                                         bit<32> operand2_2,
                                          bit<8> pkt_action
                                          ) {
 
@@ -353,6 +359,14 @@ control FlowBlazeLoop (inout headers hdr,
         meta.flowblaze_metadata.update_block.u_block_1.op2 = op2_1;
         meta.flowblaze_metadata.update_block.u_block_1.operand1 = operand1_1;
         meta.flowblaze_metadata.update_block.u_block_1.operand2 = operand2_1;
+
+        // Set operation 3: result = operation(op1, op2)
+        meta.flowblaze_metadata.update_block.u_block_2.operation = operation_2;
+        meta.flowblaze_metadata.update_block.u_block_2.result = result_2;
+        meta.flowblaze_metadata.update_block.u_block_2.op1 = op1_2;
+        meta.flowblaze_metadata.update_block.u_block_2.op2 = op2_2;
+        meta.flowblaze_metadata.update_block.u_block_2.operand1 = operand1_2;
+        meta.flowblaze_metadata.update_block.u_block_2.operand2 = operand2_2;
     }
 
     direct_counter(CounterType.packets_and_bytes) EFSM_table_counter;
@@ -515,6 +529,7 @@ control FlowBlazeLoop (inout headers hdr,
         EFSM_table.apply();
         update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_0, standard_metadata);
         update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_1, standard_metadata);
+        update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_2, standard_metadata);
 
         pkt_action.apply();
 

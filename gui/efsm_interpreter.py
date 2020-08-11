@@ -486,6 +486,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             tmp['operand1_' + str(cnt)] = r_a['operand1']
             tmp['operand2_' + str(cnt)] = r_a['operand2']
             cnt += 1
+        logger.info("CNT: %i" % cnt)
         # Fill up with empty value the unused register update actions
         for i in range(cnt, MAX_REG_ACTIONS_PER_TRANSITION):
             tmp['operation_' + str(i)] = OPERATIONS['NOP']
