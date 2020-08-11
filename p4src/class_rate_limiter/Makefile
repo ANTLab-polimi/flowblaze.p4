@@ -67,11 +67,24 @@ h2-shell:
 	$(info *** Opening H2 shell)
 	@docker exec -it ${mn_docker_name} /mininet/util/m h2
 
-h1-iperf-test:
-	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h1-iperf-test.sh'
+h10-shell:
+	$(info *** Opening H2 shell)
+	@docker exec -it ${mn_docker_name} /mininet/util/m h10
 
-h2-iperf-test:
-	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h2-iperf-test.sh'
+h1-iperf-test-udp:
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h1-iperf-test_udp.sh'
+
+h2-iperf-test-udp:
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h2-iperf-test_udp.sh'
+
+h1-iperf-test-tcp:
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h1-iperf-test_tcp.sh'
+
+h2-iperf-test-tcp:
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/${project_name}/utils/h2-iperf-test_tcp.sh'
+
+h10-tcpdump:
+	@docker exec -it ${mn_docker_name} /bin/sh -c '/mininet/util/m h10 tcpdump -i h10-eth0 -w /${project_name}/h10_dump.pcap'
 
 attach-mininet:
 	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
