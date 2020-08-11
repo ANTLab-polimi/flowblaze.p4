@@ -15,6 +15,7 @@ struct flowblaze_single_update_t {
 struct flowblaze_update_block_t {
     flowblaze_single_update_t u_block_0;
     flowblaze_single_update_t u_block_1;
+    flowblaze_single_update_t u_block_2;
 }
 
 struct flowblaze_single_condition_t {

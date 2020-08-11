@@ -25,7 +25,7 @@ Load the switch config:
 make s1-load-config
 ```
 
-Run the `ping` test:
+Run the `iperf` test:
 ```bash
 make iperf-test
 ```

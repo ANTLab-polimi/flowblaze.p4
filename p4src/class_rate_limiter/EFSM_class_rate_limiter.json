@@ -1,0 +1,79 @@
+{
+  "nodes": [
+{
+  "x": 120,
+  "y": 175,
+  "text": "0",
+  "isAcceptState": false
+},
+{
+  "x": 473,
+  "y": 209,
+  "text": "1",
+  "isAcceptState": false
+},
+{
+  "x": 679,
+  "y": 247,
+  "text": "2",
+  "isAcceptState": false
+}
+
+  ],
+  "links": [
+    {
+      "type": "Link",
+      "nodeA": 0,
+      "nodeB": 1,
+      "text": "hdr.ipv4.srcAddr == 10.0.1.0&&&0xFFFFFF00 |  | bytes = @meta ; max_bytes = 250000 ; t_lim = @now + 1000000 | forward()",
+      "lineAngleAdjust": 3.141592653589793,
+      "parallelPart": 0.5770474516695958,
+      "perpendicularPart": -118.39788819781047
+    },
+    {
+      "type": "Link",
+      "nodeA": 0,
+      "nodeB": 1,
+      "text": "hdr.ipv4.srcAddr == 10.0.0.0&&&0xFFFFFF00 |  | bytes = @meta ; t_lim = @now + 1000000 ; max_bytes = 125000 | forward()",
+      "lineAngleAdjust": 3.141592653589793,
+      "parallelPart": 0.46699002107104515,
+      "perpendicularPart": -64.1732738176606
+    },
+    {
+      "type": "SelfLink",
+      "node": 1,
+      "text": " | bytes <= max_bytes ; t_lim >= @now | bytes = bytes + @meta | forward()",
+      "anchorAngle": -1.3654009376051293
+    },
+    {
+      "type": "SelfLink",
+      "node": 1,
+      "text": " | t_lim < @now | bytes = @meta ; t_lim = @now + 1000000 | forward()",
+      "anchorAngle": 2.356194490192345
+    },
+    {
+      "type": "Link",
+      "nodeA": 1,
+      "nodeB": 2,
+      "text": " | bytes > max_bytes ; t_lim >= @now |  | drop()",
+      "lineAngleAdjust": 3.141592653589793,
+      "parallelPart": 0.8903828623518686,
+      "perpendicularPart": -25.25354565031391
+    },
+    {
+      "type": "SelfLink",
+      "node": 2,
+      "text": " | t_lim >= @now |  | drop()",
+      "anchorAngle": 1.4000611153196139
+    },
+    {
+      "type": "Link",
+      "nodeA": 2,
+      "nodeB": 1,
+      "text": " | t_lim < @now | t_lim = @now + 1000000 ; bytes = @meta | forward()",
+      "lineAngleAdjust": 3.141592653589793,
+      "parallelPart": 0.5362351868732907,
+      "perpendicularPart": -74.61491843372522
+    }
+  ]
+}
