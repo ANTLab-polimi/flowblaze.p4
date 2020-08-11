@@ -11,7 +11,7 @@ net = Mininet(switch=ONOSBmv2Switch)
 # HOSTS
 info('*** Adding hosts\n')
 h1 = net.addHost('h1', cls=P4Host, ip='10.0.0.1/8', mac="00:00:00:00:00:01")
-h2 = net.addHost('h2', cls=P4Host, ip='10.0.1.1/8', mac="00:00:00:00:00:02")
+h2 = net.addHost('h2', cls=P4Host, ip='10.0.1.200/8', mac="00:00:00:00:00:02")
 h10 = net.addHost('h10', cls=P4Host, ip='10.10.10.1/8', mac="00:00:00:00:00:10")
 
 # SWITCHES
