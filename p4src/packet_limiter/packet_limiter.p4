@@ -4,7 +4,7 @@
 
 ################################################## FLOWBLAZE PARAMETERS #############################################
 
-#define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
+#define FLOW_SCOPE { hdr.ipv4.srcAddr }
 #define CUSTOM_ACTIONS_DEFINITION action forward() { \
                                     \
                                   } \
