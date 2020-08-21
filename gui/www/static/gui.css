@@ -27,19 +27,19 @@ div {
 }
 
 .matchDiv {
-    background-color: rgba(255, 0, 0, 0.2);
+    background-color: rgba(228, 26, 28, 0.2);
 }
 
 .conditionDiv {
-    background-color: rgba(0, 0, 255, 0.2);
+    background-color: rgba(55, 126, 184, 0.2);
 }
 
 .updateDiv {
-    background-color: rgba(0, 255, 255, 0.2);
+    background-color: rgba(77, 175, 74, 0.2);
 }
 
 .actionDiv {
-    background-color: rgba(0, 255, 0, 0.2);
+    background-color: rgba(152, 78, 163, 0.2);
 }
 
 .balloon-wrapper {
