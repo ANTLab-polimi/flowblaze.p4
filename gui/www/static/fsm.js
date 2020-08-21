@@ -322,6 +322,7 @@ function drawText(c, originalText, x, y, angleOrNull, isSelected) {
 			var x2 = x;
 			for (var i = 0; i < splitted.length; i++) {
 				c.fillStyle = transitionColors[i];
+				c.font = "bold 13px Arial";
 				c.fillText(splitted[i].trim(), x2, y + 6);
 				x2 += c.measureText(splitted[i].trim()).width;
 				c.fillStyle = "black";
@@ -381,7 +382,7 @@ var currentLink = null; // a Link
 var movingObject = false;
 var originalClick;
 
-const transitionColors = ["#ff0000", "#7171ff", "#00a0fdb8", "#3ec547"];
+const transitionColors = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3"];
 
 function drawUsing(c) {
 	c.clearRect(0, 0, canvas.width, canvas.height);

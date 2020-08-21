@@ -21,7 +21,7 @@
   </tr>
   <tr>
     <td>
-      <div style="background-color:rgba(255, 0, 0, 0.2);">
+      <div style="background-color:rgba(228, 26, 28, 0.2);">
         <select id="matchField">
           <option value="matchField">matchField</option>
           {% for m in efsm_match_fields %}
@@ -32,9 +32,9 @@
         <div class="balloon-wrapper" aria-label="TODO" data-balloon-pos="down-left">
           <input type="text" value="" id="matchValue">
         </div>
-        <button class="button" style="background-color: #ff0000" onclick="addMatch()">ADD MATCH</button>
+        <button class="button" style="background-color: #e41a1c" onclick="addMatch()">ADD MATCH</button>
       </div>
-      <div style="background-color:rgba(0, 0, 255, 0.2);">
+      <div style="background-color:rgba(55, 126, 184, 0.2);">
         <div class="balloon-wrapper" aria-label="Supported condition values: flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
           <input type="text" value="" id="condOperand1">
         </div>
@@ -50,14 +50,14 @@
         <div class="balloon-wrapper" aria-label="Supported condition values: flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
           <input type="text" value="" id="condOperand2">
         </div>
-        <button class="button" style="background-color: #7171ff" onclick="addCondition()">ADD CONDITION</button>
+        <button class="button" style="background-color: #377eb8" onclick="addCondition()">ADD CONDITION</button>
       </div>
     </td>
     <td style="font-size: 30;">
       &rarr;
     </td>
     <td>
-      <div style="background-color:rgba(0, 255, 255, 0.2);">
+      <div style="background-color:rgba(77, 175, 74, 0.2);">
         <div class="balloon-wrapper" aria-label="Supported output values: flow_var, #global_var" data-balloon-pos="down-left">
           <input type="text" value="" id="updateOutput">
         </div>
@@ -76,9 +76,9 @@
         <div class="balloon-wrapper" aria-label="Supported operand values (optional): flow_var, #global_var, @meta, @now" data-balloon-pos="down-left">
           <input type="text" value="" id="updateOperand2">
         </div>
-        <button class="button" style="background-color: #00a0fdb8" onclick="addUpdate()">ADD UPDATE</button>
+        <button class="button" style="background-color: #4daf4a" onclick="addUpdate()">ADD UPDATE</button>
       </div>
-      <div style="background-color:rgba(0, 255, 0, 0.2);">
+      <div style="background-color:rgba(152, 78, 163, 0.2);">
         <select id="action">
           <option value="action">action</option>
           {% for a, p in actions.items() %}
@@ -88,7 +88,7 @@
         <div class="balloon-wrapper" aria-label="Comma separated action parameters" data-balloon-pos="down-left">
           <input type="text" value="" id="actionParam">
         </div>
-        <button class="button" style="background-color: #3ec547" onclick="setAction()">SET ACTION</button>
+        <button class="button" style="background-color: #984ea3" onclick="setAction()">SET ACTION</button>
       </div>
     </td>
   </tr>
