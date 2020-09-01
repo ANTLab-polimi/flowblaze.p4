@@ -1,8 +1,10 @@
 package org.polimi.flowblaze;
 
-
 import java.util.Optional;
 
+/**
+ * Representation of an EFSM Condition.
+ */
 public class EfsmCondition {
     public final int operand1;
     public final int operand2;
@@ -11,6 +13,7 @@ public class EfsmCondition {
     public final Operation operation;
 
     public EfsmCondition(Operation op, int op1, int op2, Optional<Integer> constOp1, Optional<Integer> constOp2) {
+        //TODO: what about meta and now registers as op1 and op2??
         if (constOp1.isPresent()) {
             this.operand1 = FlowblazeConst.EXPLICIT_OPERAND;
             this.constOperand1 = constOp1.get();

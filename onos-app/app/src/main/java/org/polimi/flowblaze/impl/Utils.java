@@ -14,12 +14,12 @@ public final class Utils {
     private static final int DEFAULT_FLOW_RULE_PRIORITY = 10;
 
     public static FlowRule buildFlowRule(DeviceId switchId, ApplicationId appId,
-                                         String tableId, PiCriterion piCriterion,
+                                         PiTableId tableId, PiCriterion piCriterion,
                                          PiTableAction piAction) {
         return DefaultFlowRule.builder()
                 .forDevice(switchId)
-                .forTable(PiTableId.of(tableId))
                 .fromApp(appId)
+                .forTable(tableId)
                 .withPriority(DEFAULT_FLOW_RULE_PRIORITY)
                 .makePermanent()
                 .withSelector(DefaultTrafficSelector.builder()
@@ -30,11 +30,11 @@ public final class Utils {
     }
 
     public static FlowRule buildDefaultActionFlowRule(DeviceId switchId, ApplicationId appId,
-                                         String tableId, PiTableAction piAction) {
+                                         PiTableId tableId, PiTableAction piAction) {
         return DefaultFlowRule.builder()
                 .forDevice(switchId)
-                .forTable(PiTableId.of(tableId))
                 .fromApp(appId)
+                .forTable(tableId)
                 .withPriority(DEFAULT_FLOW_RULE_PRIORITY)
                 .makePermanent()
                 .withSelector(DefaultTrafficSelector.builder().build())
