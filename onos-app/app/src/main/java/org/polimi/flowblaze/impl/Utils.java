@@ -10,7 +10,7 @@ import org.onosproject.net.flow.criteria.PiCriterion;
 import org.onosproject.net.pi.model.PiTableId;
 import org.onosproject.net.pi.runtime.PiTableAction;
 
-public class Utils {
+public final class Utils {
     private static final int DEFAULT_FLOW_RULE_PRIORITY = 10;
 
     public static FlowRule buildFlowRule(DeviceId switchId, ApplicationId appId,
@@ -27,5 +27,23 @@ public class Utils {
                 .withTreatment(DefaultTrafficTreatment.builder()
                                        .piTableAction(piAction).build())
                 .build();
+    }
+
+    public static FlowRule buildDefaultActionFlowRule(DeviceId switchId, ApplicationId appId,
+                                         String tableId, PiTableAction piAction) {
+        return DefaultFlowRule.builder()
+                .forDevice(switchId)
+                .forTable(PiTableId.of(tableId))
+                .fromApp(appId)
+                .withPriority(DEFAULT_FLOW_RULE_PRIORITY)
+                .makePermanent()
+                .withSelector(DefaultTrafficSelector.builder().build())
+                .withTreatment(DefaultTrafficTreatment.builder()
+                                       .piTableAction(piAction).build())
+                .build();
+    }
+
+    private Utils() {
+        // Hide constructor
     }
 }

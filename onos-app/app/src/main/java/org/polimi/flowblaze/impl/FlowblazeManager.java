@@ -1,5 +1,6 @@
 package org.polimi.flowblaze.impl;
 
+import com.google.common.collect.Lists;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.net.DeviceId;
@@ -8,7 +9,6 @@ import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.FlowRuleService;
-import org.onosproject.net.flow.criteria.PiCriterion;
 import org.onosproject.net.pi.model.PiActionId;
 import org.onosproject.net.pi.model.PiActionParamId;
 import org.onosproject.net.pi.runtime.PiAction;
@@ -19,15 +19,14 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.polimi.flowblaze.EfsmCondition;
 import org.polimi.flowblaze.FlowblazeService;
-import org.polimi.flowblaze.data.EfsmCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.List;
 
-@Component(immediate = true)
+@Component(immediate = true, service = {FlowblazeService.class})
 public class FlowblazeManager implements FlowblazeService {
 
     public static final String FLOWBLAZE_APP = "org.polimi.flowblaze";
@@ -51,9 +50,8 @@ public class FlowblazeManager implements FlowblazeService {
     protected void activate() {
         appId = coreService.registerApplication(FLOWBLAZE_APP);
         deviceListener = new InternalDeviceListener();
-        if(flowblazeDeviceId != null) {
-            deviceService.addListener(deviceListener);
-        }
+
+        deviceService.addListener(deviceListener);
 
         log.info("FlowBlaze app activated");
     }
@@ -66,7 +64,7 @@ public class FlowblazeManager implements FlowblazeService {
 
     @Override
     public void setupEfsm() {
-        if(flowblazeDeviceId == null) {
+        if (flowblazeDeviceId == null) {
             log.error("You can't set the EFSM before setting the FlowBlaze Device ID");
             return;
         }
@@ -79,26 +77,35 @@ public class FlowblazeManager implements FlowblazeService {
         log.info("Adding Conditions on {}...", flowblazeDeviceId);
         // TODO: check conditions length
 
-        String tableId = "ingress.FlowBlazeLoop.condition_table";
-        List<PiActionParam> conditionParams = Collections.emptyList();
+        String tableId = "FabricIngress.FlowBlazeLoop.condition_table";
+        List<PiActionParam> conditionParams = Lists.newArrayList();
         int i = 0;
         for (EfsmCondition c : conditions) {
-            conditionParams.add(new PiActionParam(PiActionParamId.of(String.format("cond%d", i)), c.operation.getFlowblazeConst()));
-            conditionParams.add(new PiActionParam(PiActionParamId.of(String.format("op1_%d", i)), c.operand1));
-            conditionParams.add(new PiActionParam(PiActionParamId.of(String.format("op2_%d", i)), c.operand2));
-            conditionParams.add(new PiActionParam(PiActionParamId.of(String.format("operand1_%d", i)), c.constOperand1));
-            conditionParams.add(new PiActionParam(PiActionParamId.of(String.format("operand2_%d", i)), c.constOperand2));
+            conditionParams.add(new PiActionParam(
+                    PiActionParamId.of(String.format("cond%d", i)),
+                    c.operation.getFlowblazeConst()));
+            conditionParams.add(new PiActionParam(
+                    PiActionParamId.of(String.format("op1_%d", i)),
+                    c.operand1));
+            conditionParams.add(new PiActionParam(
+                    PiActionParamId.of(String.format("op2_%d", i)),
+                    c.operand2));
+            conditionParams.add(new PiActionParam(
+                    PiActionParamId.of(String.format("operand1_%d", i)),
+                    c.constOperand1));
+            conditionParams.add(new PiActionParam(
+                    PiActionParamId.of(String.format("operand2_%d", i)),
+                    c.constOperand2));
             i++;
         }
-        PiCriterion match = PiCriterion.builder().build();
 
         PiTableAction action = PiAction.builder()
-                .withId(PiActionId.of("ingress.FlowBlazeLoop.condition_table.set_condition_fields"))
+                .withId(PiActionId.of("FabricIngress.FlowBlazeLoop.set_condition_fields"))
                 .withParameters(conditionParams)
                 .build();
 
-        FlowRule myStationRule = Utils.buildFlowRule(
-                flowblazeDeviceId, appId, tableId, match, action);
+        FlowRule myStationRule = Utils.buildDefaultActionFlowRule(
+                flowblazeDeviceId, appId, tableId, action);
 
         flowRuleService.applyFlowRules(myStationRule);
     }
@@ -114,14 +121,14 @@ public class FlowblazeManager implements FlowblazeService {
     }
 
     @Override
-    public void setDeviceId(DeviceId deviceId) {
-        if(deviceId != null) {
+    public void setFlowblazeDeviceId(DeviceId deviceId) {
+        if (flowblazeDeviceId != null) {
             log.error("You can modify the FlowBlaze Device ID if already set");
             return;
         }
         flowblazeDeviceId = deviceId;
-        deviceService.addListener(deviceListener);
     }
+
     /**
      * React to devices.
      */

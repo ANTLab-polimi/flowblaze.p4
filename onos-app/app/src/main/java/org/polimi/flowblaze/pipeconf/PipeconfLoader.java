@@ -13,7 +13,6 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.polimi.flowblaze.FlowblazeProgrammable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public final class PipeconfLoader {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private static final String BASE_PATH = "/p4c-out/fabric-flowblaze/bmv2/default/";
-    private static final String P4INFO= "p4info.txt";
+    private static final String P4INFO = "p4info.txt";
     private static final String BMV2_JSON_FILE = "bmv2.json";
     private static final String CPU_PORT = "cpu_port.txt";
     private static final PiPipeconfId PIPECONF_ID = new PiPipeconfId("org.polimi.fabric-flowblaze");

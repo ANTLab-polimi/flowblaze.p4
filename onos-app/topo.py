@@ -27,8 +27,9 @@ net.addLink(h10, s1)
 info('*** Starting network\n')
 
 net.start()
-info('*** Static ARP\n')
-net.staticArp()
+# ARP managed via ARP Proxy in ONOS
+#info('*** Static ARP\n')
+#net.staticArp()
 
 info('*** Running CLI\n')
 CLI(net)

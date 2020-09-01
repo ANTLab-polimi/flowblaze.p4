@@ -1,4 +1,4 @@
-
+- flowblaze lib è copiata: usare un unica versione nell'intero repository
 - PortStatsDiscovery behaviour per fabric-flowblaze
 - Implentare un behaviour flowblaze programmable
 - controllare che le azioni e cose richieste siano effettivamente presenti nella pipeline flowblaze disponibile

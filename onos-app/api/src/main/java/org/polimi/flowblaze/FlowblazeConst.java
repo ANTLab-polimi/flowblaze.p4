@@ -1,6 +1,6 @@
 package org.polimi.flowblaze;
 
-public class FlowblazeConst {
+public final class FlowblazeConst {
     public static final byte CONDITION_NOP  = 0b000;
     public static final byte CONDITION_EQ   = 0b001;
     public static final byte CONDITION_GTE  = 0b011;
@@ -10,5 +10,7 @@ public class FlowblazeConst {
 
     public static final byte EXPLICIT_OPERAND = (byte) 0xFF;
 
-
+    private FlowblazeConst() {
+        // Hide constructor
+    }
 }

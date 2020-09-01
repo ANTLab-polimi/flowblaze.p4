@@ -15,14 +15,14 @@ import org.polimi.flowblaze.FlowblazeService;
         description = "Setup the FlowBlaze Device")
 public class SetDevice extends AbstractShellCommand {
 
-    @Argument(index = 0, name = "deviceId", description = "Device ID", required = true)
+    @Argument(name = "deviceId", description = "Device ID", required = true)
     @Completion(DeviceIdCompleter.class)
     String deviceId = null;
 
     @Override
     protected void doExecute() throws Exception {
-        FlowblazeService flowblazeManager = get(FlowblazeService.class);
-        flowblazeManager.setDeviceId(DeviceId.deviceId(deviceId));
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        flowblazeService.setFlowblazeDeviceId(DeviceId.deviceId(deviceId));
     }
 
 }

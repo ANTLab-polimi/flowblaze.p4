@@ -12,7 +12,6 @@
     </parent>
 
     <artifactId>flowblaze-app</artifactId>
-
     <packaging>bundle</packaging>
     <description>FlowBlaze Control app</description>
 
@@ -25,6 +24,7 @@
             FlowBlaze ONOS app
         </onos.app.readme>
         <onos.app.requires>
+            org.onosproject.pipelines.fabric
         </onos.app.requires>
     </properties>
 
@@ -83,12 +83,14 @@
             <groupId>org.onosproject</groupId>
             <artifactId>onos-protocols-p4runtime-model</artifactId>
             <version>${onos.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>onos-protocols-p4runtime-api</artifactId>
             <version>${onos.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
