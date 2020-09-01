@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<app name="org.polimi.flowblaze" origin="Politecnico di Milano"
+     version="${project.version}"
+     category="default" url="http://onosproject.org" title="flowblaze"
+     featuresRepo="mvn:${project.groupId}/${project.artifactId}/${project.version}/xml/features"
+     features="${project.artifactId}" apps="">
+    <description>${project.description}</description>
+    <artifact>mvn:${project.groupId}/${project.artifactId}/${project.version}</artifact>
+    <artifact>mvn:${project.groupId}/flowblaze-api/${project.version}</artifact>
+</app>

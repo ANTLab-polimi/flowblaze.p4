@@ -1,0 +1,82 @@
+{
+  "devices": {
+    "device:leaf1": {
+      "ports": {
+        "1": {
+          "name": "s1-eth1",
+          "speed": 10000,
+          "enabled": true,
+          "number": 1,
+          "removed": false,
+          "type": "copper"
+        },
+        "2": {
+          "name": "s1-eth2",
+          "speed": 10000,
+          "enabled": true,
+          "number": 2,
+          "removed": false,
+          "type": "copper"
+        },
+        "3": {
+          "name": "s1-eth3",
+          "speed": 10000,
+          "enabled": true,
+          "number": 3,
+          "removed": false,
+          "type": "copper"
+        }
+      },
+      "basic": {
+        "managementAddress": "grpc://172.17.0.2:50001?device_id=1",
+        "driver": "bmv2",
+        "pipeconf": "org.polimi.fabric-flowblaze"
+      },
+      "segmentrouting": {
+        "name": "leaf1",
+        "ipv4NodeSid": 100,
+        "ipv4Loopback": "192.168.0.100",
+        "ipv6NodeSid": 101,
+        "ipv6Loopback": "2000::c0a8:0100",
+        "routerMac": "00:00:00:00:01:00",
+        "isEdgeRouter": true,
+        "adjacencySids": []
+      }
+    }
+  },
+  "ports": {
+    "device:leaf1/1": {
+      "interfaces": [
+        {
+          "name": "h1",
+          "ips": [
+            "10.0.0.254/24"
+          ],
+          "vlan-untagged": 10
+        }
+      ]
+    },
+    "device:leaf1/2": {
+      "interfaces": [
+        {
+          "name": "h2",
+          "ips": [
+            "10.0.1.254/24"
+          ],
+          "vlan-untagged": 10
+        }
+      ]
+    },
+    "device:leaf1/3": {
+      "interfaces": [
+        {
+          "name": "h10",
+          "ips": [
+            "10.10.10.254/24"
+          ],
+          "vlan-untagged": 10
+        }
+      ]
+    }
+  }
+}

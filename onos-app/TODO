@@ -1,0 +1,5 @@
+
+- PortStatsDiscovery behaviour per fabric-flowblaze
+- Implentare un behaviour flowblaze programmable
+- controllare che le azioni e cose richieste siano effettivamente presenti nella pipeline flowblaze disponibile
+- dividere pipeconf che è diverso per ogni implementazione di flowblaze dall'app che fornisce l'interfaccia per controllarla che può essere standard e verifica che le azioni etc richieste siano disponibili nella pipeline
