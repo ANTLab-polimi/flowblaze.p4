@@ -16,7 +16,7 @@ public class SetPktAction extends AbstractShellCommand {
     String actionName = null;
 
     @Argument(index = 1, name = "pktActionid", description = "Packet Action ID", required = true)
-    int pktActionid = -1;
+    byte pktActionid = -1;
 
     @Override
     protected void doExecute() throws Exception {

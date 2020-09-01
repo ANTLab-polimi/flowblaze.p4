@@ -8,6 +8,6 @@ public interface FlowblazeService {
 
     void setupConditions(List<EfsmCondition> conditions);
     void setupEfsmTable(EfsmMatch match, int nextState, List<EfsmOperation> operations, byte pktAction);
-    void setupPktActions(int pktAction, String action);
+    void setupPktActions(byte pktAction, String action);
     void setFlowblazeDeviceId(DeviceId deviceId);
 }

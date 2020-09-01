@@ -54,7 +54,7 @@ public final class FlowblazeConst {
             PiMatchFieldId.of("meta.flowblaze_metadata.c3");
 
     public static final PiMatchFieldId FIELD_PKT_ACTION_PKT_ACTION =
-            PiMatchFieldId.of("meta.flowblaze_metadata.pkt_actio");
+            PiMatchFieldId.of("meta.flowblaze_metadata.pkt_action");
 
 
     public static final byte[] ONE = {1};

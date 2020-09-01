@@ -196,9 +196,9 @@ public class FlowblazeManager implements FlowblazeService {
     }
 
     @Override
-    public void setupPktActions(int pktAction, String actionName) {
+    public void setupPktActions(byte pktAction, String actionName) {
         PiCriterion criteria = PiCriterion.builder()
-                .matchTernary(FIELD_PKT_ACTION_PKT_ACTION, pktAction, 0xFFFF)
+                .matchTernary(FIELD_PKT_ACTION_PKT_ACTION, pktAction, 0xFF)
                 .build();
 
         // TODO: support actions with parameters!!
