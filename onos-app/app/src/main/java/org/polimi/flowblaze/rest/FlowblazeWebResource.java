@@ -1,0 +1,195 @@
+/*
+ * Copyright 2017-present Open Networking Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.polimi.flowblaze.rest;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.onosproject.net.DeviceId;
+import org.onosproject.rest.AbstractWebResource;
+import org.polimi.flowblaze.EfsmCondition;
+import org.polimi.flowblaze.EfsmOperation;
+import org.polimi.flowblaze.FlowblazeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.util.stream.LongStream;
+
+import static org.polimi.flowblaze.FlowblazeConst.MAX_CONDITIONS;
+import static org.polimi.flowblaze.FlowblazeConst.MAX_OPERATIONS;
+
+/**
+ * Intent Monitor and Reroute REST API.
+ */
+@Path("flowblaze")
+public class FlowblazeWebResource extends AbstractWebResource {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private FlowblazeService flowblazeService;
+
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @POST
+    @Path("setPktActions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setPktActions(InputStream stream) {
+        flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = mapper().createObjectNode();
+        StringBuilder resultString = new StringBuilder();
+
+        mapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        try {
+            PktActions msg = mapper().readValue(stream, PktActions.class);
+            String outcome;
+            for (PktActions.PktAction action : msg.pktActions) {
+                try {
+                    if (!flowblazeService.setupPktAction(action.id, action.action)) {
+                        outcome = String.format("Error on submitting %s action with ID %d", action.action, action.id);
+                    } else {
+                        outcome = "OK";
+                    }
+                } catch (IllegalArgumentException | NullPointerException ex) {
+                    outcome = ex.getMessage();
+                }
+                if (!outcome.equals("OK")) {
+                    if (resultString.length() > 0) {
+                        resultString.append(" ");
+                    }
+                    resultString.append(outcome);
+                }
+                if (resultString.length() > 0) {
+                    result.put("response", "setPktActions() failed: ".concat(resultString.toString()));
+                } else {
+                    result.put("response", "OK");
+                }
+            }
+            return ok(result).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
+                    entity(e.toString())
+                    .build();
+        }
+    }
+
+
+    @POST
+    @Path("setConditions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setConditions(InputStream stream) {
+        flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = mapper().createObjectNode();
+        StringBuilder resultString = new StringBuilder();
+
+        mapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        try {
+            EfsmConditions msg = mapper().readValue(stream, EfsmConditions.class);
+            // Fill-up missing conditions
+            if (msg.conditions != null && msg.conditions.size() < MAX_CONDITIONS) {
+                int diff = MAX_CONDITIONS - msg.conditions.size();
+                LongStream.range(0, diff).forEach(i -> msg.conditions.add(EfsmCondition.defaultEfsmCondition()));
+            }
+            String outcome;
+            try {
+                if (!flowblazeService.setupConditions(msg.conditions)) {
+                    outcome = "Error on submitting conditions";
+                } else {
+                    outcome = "OK";
+                }
+            } catch (IllegalArgumentException | NullPointerException ex) {
+                outcome = ex.getMessage();
+            }
+            if (!outcome.equals("OK")) {
+                resultString.append(outcome);
+            }
+            if (resultString.length() > 0) {
+                result.put("response", "setConditions() failed: ".concat(resultString.toString()));
+            } else {
+                result.put("response", "OK");
+            }
+            return ok(result).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
+                    entity(e.toString())
+                    .build();
+        }
+    }
+
+    @POST
+    @Path("setEfsmEntry")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response setEfsmEntry(InputStream stream) {
+        flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = mapper().createObjectNode();
+        StringBuilder resultString = new StringBuilder();
+
+        mapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        try {
+            EfsmEntry msg = mapper().readValue(stream, EfsmEntry.class);
+            // Fill-up missing operations
+            if (msg.operations != null && msg.operations.size() < MAX_OPERATIONS) {
+                int diff = MAX_OPERATIONS - msg.operations.size();
+                LongStream.range(0, diff).forEach(i -> msg.operations.add(EfsmOperation.defaultEfsmOperation()));
+            }
+            String outcome;
+            try {
+                if (!flowblazeService.setupEfsmTable(msg.match, msg.nextState, msg.operations, msg.pktAction)) {
+                    outcome = "Error on submitting EFSM Entry";
+                } else {
+                    outcome = "OK";
+                }
+            } catch (IllegalArgumentException | NullPointerException ex) {
+                outcome = ex.getMessage();
+            }
+            if (!outcome.equals("OK")) {
+                resultString.append(outcome);
+            }
+            if (resultString.length() > 0) {
+                result.put("response", "setConditions() failed: ".concat(resultString.toString()));
+            } else {
+                result.put("response", "OK");
+            }
+            return ok(result).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).
+                    entity(e.toString())
+                    .build();
+        }
+    }
+
+    @GET
+    @Path("getDeviceId")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDeviceId() {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        DeviceId devId = flowblazeService.getFlowBlazeDeviceId();
+        ObjectNode result = new ObjectMapper().createObjectNode();
+        result.put("DeviceId", devId != null ? devId.toString() : "none");
+        return ok(result.toString()).build();
+    }
+}

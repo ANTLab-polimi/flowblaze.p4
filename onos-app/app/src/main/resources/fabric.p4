@@ -81,9 +81,6 @@ control FabricIngress (inout parsed_headers_t hdr,
             // multicast groups. Remove when gNMI support will be there.
             port_counters_control.apply(hdr, fabric_metadata, standard_metadata);
 #endif // WITH_PORT_COUNTER
-#if defined(WITH_INT_SOURCE) || defined(WITH_INT_SINK)
-            process_set_source_sink.apply(hdr, fabric_metadata, standard_metadata);
-#endif
         }
         // Last apply FlowBlaze Loop.
 
@@ -99,23 +96,10 @@ control FabricEgress (inout parsed_headers_t hdr,
 
     PacketIoEgress() pkt_io_egress;
     EgressNextControl() egress_next;
-#ifdef WITH_SPGW
-    SpgwEgress() spgw_egress;
-#endif // WITH_SPGW
-
     apply {
         _PRE_EGRESS
         pkt_io_egress.apply(hdr, fabric_metadata, standard_metadata);
         egress_next.apply(hdr, fabric_metadata, standard_metadata);
-#ifdef WITH_SPGW
-        spgw_egress.apply(hdr, fabric_metadata);
-#endif // WITH_SPGW
-#ifdef WITH_BNG
-        bng_egress.apply(hdr, fabric_metadata, standard_metadata);
-#endif // WITH_BNG
-#ifdef WITH_INT
-        process_int_main.apply(hdr, fabric_metadata, standard_metadata);
-#endif
     }
 }
 

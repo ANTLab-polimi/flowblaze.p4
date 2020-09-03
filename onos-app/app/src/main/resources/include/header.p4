@@ -129,12 +129,6 @@ struct fabric_metadata_t {
     vlan_id_t     vlan_id;
     bit<3>        vlan_pri;
     bit<1>        vlan_cfi;
-#ifdef WITH_DOUBLE_VLAN_TERMINATION
-    _BOOL         push_double_vlan;
-    vlan_id_t     inner_vlan_id;
-    bit<3>        inner_vlan_pri;
-    bit<1>        inner_vlan_cfi;
-#endif // WITH_DOUBLE_VLAN_TERMINATION
     mpls_label_t  mpls_label;
     bit<8>        mpls_ttl;
     _BOOL         skip_forwarding;
@@ -148,6 +142,7 @@ struct fabric_metadata_t {
     bit<16>       l4_dport;
     bit<32>       ipv4_src_addr;
     bit<32>       ipv4_dst_addr;
+    bit<32>       ipv4_dst_addr;
     // FLOWBLAZE Metadata
     flowblaze_t   flowblaze_metadata;
 }
@@ -155,9 +150,9 @@ struct fabric_metadata_t {
 struct parsed_headers_t {
     ethernet_t ethernet;
     vlan_tag_t vlan_tag;
-#if defined(WITH_XCONNECT) || defined(WITH_DOUBLE_VLAN_TERMINATION)
+#if defined(WITH_XCONNECT)
     vlan_tag_t inner_vlan_tag;
-#endif // WITH_XCONNECT || WITH_DOUBLE_VLAN_TERMINATION
+#endif // WITH_XCONNECT
     eth_type_t eth_type;
     mpls_t mpls;
     ipv4_t ipv4;

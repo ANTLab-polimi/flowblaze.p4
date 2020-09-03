@@ -1,0 +1,32 @@
+{
+  "match": {
+    "state": 2,
+    "condition0": false,
+    "condition1": false,
+    "condition2": false,
+    "condition3": false,
+    "efsmExtraMatch": {
+      "hdr.ipv4.src_addr": [10, 0, 0, 1]
+    }
+  },
+  "nextState": 2,
+  "operations": [
+    {
+      "operation": "NOP",
+      "result": 1,
+      "operand1": "1",
+      "operand2": "2",
+      "constOperand1": 0,
+      "constOperand2": 0
+    },
+    {
+      "operation": "NOP",
+      "result": 1,
+      "operand1": "1",
+      "operand2": "2",
+      "constOperand1": 0,
+      "constOperand2": 0
+    }
+  ],
+  "pktAction": 1
+}

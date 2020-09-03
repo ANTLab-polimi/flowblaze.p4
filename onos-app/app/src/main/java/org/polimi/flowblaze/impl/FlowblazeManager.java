@@ -72,16 +72,22 @@ public class FlowblazeManager implements FlowblazeService {
     @Deactivate
     protected void deactivate() {
         deviceService.removeListener(deviceListener);
+        flowRuleService.removeFlowRulesById(appId);
         log.info("FlowBlaze app deactivated");
     }
 
     @Override
-    public void setupConditions(List<EfsmCondition> conditions) {
+    public boolean setupConditions(List<EfsmCondition> conditions) {
+        // N.B: conditions are ordered!!! Must be filled in order!
         log.info("Adding Conditions on {}...", flowblazeDeviceId);
         if (conditions.size() != MAX_CONDITIONS) {
             log.error(String.format("Wrong number of conditions! (Provided: %d, Required: %d)",
                                     conditions.size(), MAX_CONDITIONS));
-            return;
+            return false;
+        }
+        if (flowblazeDeviceId == null) {
+            log.error("First set the FlowBlaze Device ID");
+            return false;
         }
         List<PiActionParam> conditionParams = Lists.newArrayList();
         int i = 0;
@@ -103,6 +109,7 @@ public class FlowblazeManager implements FlowblazeService {
                     c.constOperand2));
             i++;
         }
+        log.info(conditionParams.toString());
 
         PiTableAction action = PiAction.builder()
                 .withId(ACTION_SET_CONDITION_FIELDS)
@@ -113,31 +120,35 @@ public class FlowblazeManager implements FlowblazeService {
                 flowblazeDeviceId, appId, TABLE_CONDITION_TABLE, action);
 
         flowRuleService.applyFlowRules(conditionsRule);
+        return true;
     }
 
     @Override
-    public void setupEfsmTable(EfsmMatch match, int nextState, List<EfsmOperation> operations, byte pktAction) {
+    public boolean setupEfsmTable(EfsmMatch match, int nextState, List<EfsmOperation> operations, byte pktAction) {
         // TODO: should we check if the pkt_action is actually available?
         //  This would mean that first we have to push pkt_actions and then setup the EFSM Table.
 
         log.info("Adding EFSM Table entry on {}...", flowblazeDeviceId);
-
+        if (flowblazeDeviceId == null) {
+            log.error("First set the FlowBlaze Device ID");
+            return false;
+        }
         if (operations.size() != MAX_OPERATIONS) {
             log.error(String.format("Missing operations! (Provided: %d, Required: %d)",
                                     operations.size(), MAX_OPERATIONS));
-            return;
+            return false;
         }
         if (piPipeconfService.getPipeconf(flowblazeDeviceId).isPresent()) {
             // TODO: not sure this check if necessary, the translator would fail
             //  anyway and not exception would be generated. Maybe we can issue a simple warning?
             if (!match.checkEfsmExtraMatchFields(piPipeconfService.getPipeconf(flowblazeDeviceId).get())) {
                 log.error("EFSM Extra Match Fields not available!, use a device with a different pipeconf");
-                return;
+                return false;
             }
         } else {
             // TODO: should we continue???
             log.info("No pipeconf present! Not able to check EFSM Extra Match Fields");
-            return;
+            return false;
         }
 
         // Build action and action parameters
@@ -174,11 +185,19 @@ public class FlowblazeManager implements FlowblazeService {
 
         // Build match part of EFSM table entry
         PiCriterion.Builder criterionBuilder = PiCriterion.builder()
-                .matchTernary(FIELD_EFSM_TABLE_STATE, match.state, 0xFFFF)
-                .matchTernary(FIELD_EFSM_TABLE_C0, match.condition0 ? ONE : ZERO, ONE)
-                .matchTernary(FIELD_EFSM_TABLE_C1, match.condition1 ? ONE : ZERO, ONE)
-                .matchTernary(FIELD_EFSM_TABLE_C2, match.condition2 ? ONE : ZERO, ONE)
-                .matchTernary(FIELD_EFSM_TABLE_C3, match.condition3 ? ONE : ZERO, ONE);
+                .matchTernary(FIELD_EFSM_TABLE_STATE, match.state, 0xFFFF);
+        if (match.condition0 != null) {
+            criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C0, match.condition0 ? ONE : ZERO, ONE);
+        }
+        if (match.condition1 != null) {
+            criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C1, match.condition1 ? ONE : ZERO, ONE);
+        }
+        if (match.condition2 != null) {
+            criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C2, match.condition2 ? ONE : ZERO, ONE);
+        }
+        if (match.condition3 != null) {
+            criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C3, match.condition3 ? ONE : ZERO, ONE);
+        }
 
         for (Map.Entry<String, byte[]> field : match.efsmExtraMatchFields.entrySet()) {
             byte[] matchMask = new byte[field.getValue().length];
@@ -189,14 +208,19 @@ public class FlowblazeManager implements FlowblazeService {
 
         // Build EFSM Rule
         FlowRule efsmRule = Utils.buildFlowRule(
-                flowblazeDeviceId, appId, TABLE_CONDITION_TABLE,
+                flowblazeDeviceId, appId, TABLE_EFSM_TABLE,
                 criterionBuilder.build(), action);
 
         flowRuleService.applyFlowRules(efsmRule);
+        return true;
     }
 
     @Override
-    public void setupPktActions(byte pktAction, String actionName) {
+    public boolean setupPktAction(byte pktAction, String actionName) {
+        if (flowblazeDeviceId == null) {
+            log.error("First set the FlowBlaze Device ID");
+            return false;
+        }
         PiCriterion criteria = PiCriterion.builder()
                 .matchTernary(FIELD_PKT_ACTION_PKT_ACTION, pktAction, 0xFF)
                 .build();
@@ -210,6 +234,7 @@ public class FlowblazeManager implements FlowblazeService {
                 flowblazeDeviceId, appId, TABLE_PKT_ACTION, criteria, action);
 
         flowRuleService.applyFlowRules(pktActionRule);
+        return true;
     }
 
     @Override
@@ -219,6 +244,11 @@ public class FlowblazeManager implements FlowblazeService {
             return;
         }
         flowblazeDeviceId = deviceId;
+    }
+
+    @Override
+    public DeviceId getFlowBlazeDeviceId() {
+        return flowblazeDeviceId;
     }
 
     /**

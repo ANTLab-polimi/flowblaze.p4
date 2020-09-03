@@ -55,9 +55,6 @@ control Filtering (inout parsed_headers_t hdr,
             standard_metadata.ingress_port : exact @name("ig_port");
             hdr.vlan_tag.isValid()         : exact @name("vlan_is_valid");
             hdr.vlan_tag.vlan_id           : ternary @name("vlan_id");
-#ifdef WITH_DOUBLE_VLAN_TERMINATION
-            hdr.inner_vlan_tag.vlan_id     : ternary @name("inner_vlan_id");
-#endif // WITH_DOUBLE_VLAN_TERMINATION
         }
         actions = {
             deny();
@@ -112,13 +109,6 @@ control Filtering (inout parsed_headers_t hdr,
             fabric_metadata.vlan_pri = hdr.vlan_tag.pri;
             fabric_metadata.vlan_cfi = hdr.vlan_tag.cfi;
         }
-        #ifdef WITH_DOUBLE_VLAN_TERMINATION
-        if (hdr.inner_vlan_tag.isValid()) {
-            fabric_metadata.inner_vlan_id = hdr.inner_vlan_tag.vlan_id;
-            fabric_metadata.inner_vlan_pri = hdr.inner_vlan_tag.pri;
-            fabric_metadata.inner_vlan_cfi = hdr.inner_vlan_tag.cfi;
-        }
-        #endif // WITH_DOUBLE_VLAN_TERMINATION
         if (!hdr.mpls.isValid()) {
             // Packets with a valid MPLS header will have
             // fabric_metadata.mpls_ttl set to the packet's MPLS ttl value (see

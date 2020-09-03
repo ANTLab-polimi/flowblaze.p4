@@ -43,10 +43,6 @@ control FabricComputeChecksum(inout parsed_headers_t hdr,
             hdr.ipv4.hdr_checksum,
             HashAlgorithm.csum16
         );
-#ifdef WITH_SPGW
-        update_gtpu_checksum.apply(hdr.gtpu_ipv4, hdr.gtpu_udp, hdr.gtpu,
-                                   hdr.ipv4, hdr.udp);
-#endif // WITH_SPGW
     }
 }
 

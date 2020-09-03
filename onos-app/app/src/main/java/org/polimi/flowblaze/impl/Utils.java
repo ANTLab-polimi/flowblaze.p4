@@ -11,7 +11,7 @@ import org.onosproject.net.pi.model.PiTableId;
 import org.onosproject.net.pi.runtime.PiTableAction;
 
 public final class Utils {
-    private static final int DEFAULT_FLOW_RULE_PRIORITY = 10;
+    private static final int DEFAULT_FLOW_RULE_PRIORITY = 20;
 
     public static FlowRule buildFlowRule(DeviceId switchId, ApplicationId appId,
                                          PiTableId tableId, PiCriterion piCriterion,

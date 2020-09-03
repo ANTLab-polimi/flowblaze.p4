@@ -43,6 +43,12 @@ attach-mininet:
 	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
 	@docker attach mininet_onos
 
+test-h1:
+	@docker exec -it mininet_onos /bin/sh -c '/mn_onos/utils/h1-iperf-test_udp.sh'
+
+test-h2:
+	@docker exec -it mininet_onos /bin/sh -c '/mn_onos/utils/h2-iperf-test_udp.sh'
+
 p4runtime_shell:
 	docker run -ti p4lang/p4runtime-sh \
       --grpc-addr 172.17.0.2:50001 \

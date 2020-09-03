@@ -1,0 +1,60 @@
+table_set_default ingress.FlowBlazeLoop.condition_table set_condition_fields 0b101 0x00 0x01 0 0 0b010 0x00 0x01 0 0 0b100 0x02 0xF2 0 0 0b011 0x02 0xF2 0 0
+flowblaze:set-condition LTE 0 1 0 0 GT 0 1 0 0 LT 2 NOW 0 0 GTE 2 NOW 0 0
+
+
+table_add ingress.FlowBlazeLoop.pkt_action drop 0x1&&&0xFF =>  10
+flowblaze:set-pktaction FabricIngress.FlowBlazeLoop.drop 1
+
+
+table_add ingress.FlowBlazeLoop.pkt_action forward 0x2&&&0xFF =>  10
+flowblaze:set-pktaction FabricIngress.FlowBlazeLoop.forward 2
+
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 0&&&0xFFFF 0&&&0 0&&&0 0&&&0 0&&&0 10.0.1.0&&&0xFFFFFF00 => 1
+0x01 0x00 0xF1 0xFF 0       0
+0x01 0x01 0xFF 0xFF 262144  0
+0x01 0x02 0xF2 0xFF 0       1000000
+2 1
+flowblaze:set-efsmentry -efsmExtraMatchField="hdr.ipv4.src_addr" -efsmExtraMatchFieldValue [10 0 1 200] -operation0 PLUS -result_0 0 -op1_0 META -op2_0 CONST -const_op2_0 0 -operation1 PLUS -result_1 1 -op1_1 CONST -op2_1 CONST -const_op1_1 262144 -const_op2_1 0 -operation2 PLUS -result_2 2 -op1_2 NOW -op2_2 CONST -const_op2_2 1000000 0 1 2
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 0&&&0xFFFF 0&&&0 0&&&0 0&&&0 0&&&0 10.0.0.0&&&0xFFFFFF00 => 1
+0x01 0x00 0xF1 0xFF 0       0
+0x01 0x02 0xF2 0xFF 0       1000000
+0x01 0x01 0xFF 0xFF 131072  0
+2 1
+flowblaze:set-efsmentry -efsmExtraMatchField="hdr.ipv4.src_addr" -efsmExtraMatchFieldValue [10 0 0 1] -operation0 PLUS -result_0 0 -op1_0 META -op2_0 CONST -const_op2_0 0 -operation1 PLUS -result_1 1 -op1_1 CONST -op2_1 CONST -const_op1_1 131072 -const_op2_1 0 -operation2 PLUS -result_2 2 -op1_2 NOW -op2_2 CONST -const_op2_2 1000000 0 1 2
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 1&&&1 0&&&0 0&&&0 1&&&1 0&&&0 => 1
+0x01 0x00 0x00 0xF1 0       0
+0x00 0    0    0    0       0
+0x00 0    0    0    0       0
+2 1
+flowblaze:set-efsmentry -operation0 PLUS -condition0=true -condition3=true -result_0 0 -op1_0 0 -op2_0 META 1 1 2
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 0&&&0 0&&&0 1&&&1 0&&&0 0&&&0 => 1
+0x01 0x00 0xF1 0xFF 0       0
+0x01 0x02 0xF2 0xFF 0       1000000
+0x00 0    0    0    0       0
+2 1
+flowblaze:set-efsmentry -condition2=true -operation0 PLUS -result_0 0 -op1_0 META -op2_0 CONST -operation1 PLUS -result_1 2 -op1_1 NOW -op2_1 CONST -const_op2_1 1000000 1 1 2
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 1&&&0xFFFF 0&&&0 1&&&1 0&&&0 1&&&1 0&&&0 => 2
+0x00 0 0 0 0 0
+0x00 0 0 0 0 0
+0x00 0 0 0 0 0
+1 1
+flowblaze:set-efsmentry -condition1=true -condition3=true 1 2 1
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 2&&&0xFFFF 0&&&0 0&&&0 0&&&0 1&&&1 0&&&0 => 2
+0x00 0 0 0 0 0
+0x00 0 0 0 0 0
+0x00 0 0 0 0 0
+1 1
+flowblaze:set-efsmentry -condition3=true 2 2 1
+
+table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state 2&&&0xFFFF 0&&&0 0&&&0 1&&&1 0&&&0 0&&&0 => 1
+0x01 0x02 0xF2 0xFF 0       1000000
+0x01 0x00 0xF1 0xFF 0       0
+0x00 0    0    0    0       0
+2 1
+flowblaze:set-efsmentry -condition2=true -operation0 PLUS -result_0 2 -op1_0 NOW -op2_0 CONST -const_op2_0 1000000 -operation1 PLUS -result_1 0 -op1_1 META -op2_1 CONST 2 1 2

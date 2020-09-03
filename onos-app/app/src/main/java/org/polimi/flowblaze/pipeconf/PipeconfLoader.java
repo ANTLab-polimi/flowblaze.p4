@@ -1,5 +1,6 @@
 package org.polimi.flowblaze.pipeconf;
 
+import org.onosproject.net.device.PortStatisticsDiscovery;
 import org.onosproject.net.driver.DriverAdminService;
 import org.onosproject.net.driver.DriverProvider;
 import org.onosproject.net.pi.model.DefaultPiPipeconf;
@@ -13,6 +14,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.polimi.flowblaze.impl.PortStatisticsDiscoveryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +76,8 @@ public final class PipeconfLoader {
 
         DefaultPiPipeconf.Builder builder = DefaultPiPipeconf.builder()
                 .withId(PIPECONF_ID)
+                // TODO: is there a more elegant way?
+                .addBehaviour(PortStatisticsDiscovery.class, PortStatisticsDiscoveryImpl.class)
                 .addExtension(BMV2_JSON, bmv2JsonUrlUrl);
 
         // Use the standard Fabric Pipeliner

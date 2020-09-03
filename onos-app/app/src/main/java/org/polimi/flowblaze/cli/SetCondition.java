@@ -10,7 +10,6 @@ import org.polimi.flowblaze.EfsmCondition;
 import org.polimi.flowblaze.FlowblazeService;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Command(scope = "flowblaze", name = "set-condition",
@@ -27,10 +26,10 @@ public class SetCondition extends AbstractShellCommand {
     String op20 = null;
 
     @Argument(index = 3, name = "const_op1_1", description = "1st Const Operand 1")
-    String constOp10 = null;
+    int constOp10 = -1;
 
     @Argument(index = 4, name = "const_op2_1", description = "1st Const Operand 2")
-    String constOp20 = null;
+    int constOp20 = -1;
 
 
     @Argument(index = 5, name = "operation1", description = "2nd Operation")
@@ -43,10 +42,10 @@ public class SetCondition extends AbstractShellCommand {
     String op21 = null;
 
     @Argument(index = 8, name = "const_op1_1", description = "2nd Const Operand 1")
-    String constOp11 = null;
+    int constOp11 = -1;
 
     @Argument(index = 9, name = "const_op2_1", description = "2nd Const Operand 2")
-    String constOp21 = null;
+    int constOp21 = -1;
 
 
     @Argument(index = 10, name = "operation1", description = "3rd Operation")
@@ -59,10 +58,10 @@ public class SetCondition extends AbstractShellCommand {
     String op22 = null;
 
     @Argument(index = 13, name = "const_op1_1", description = "3rd Const Operand 1")
-    String constOp12 = null;
+    int constOp12 = -1;
 
     @Argument(index = 14, name = "const_op2_1", description = "3rd Const Operand 2")
-    String constOp22 = null;
+    int constOp22 = -1;
 
 
     @Argument(index = 15, name = "operation1", description = "4th Operation")
@@ -75,10 +74,10 @@ public class SetCondition extends AbstractShellCommand {
     String op23 = null;
 
     @Argument(index = 18, name = "const_op1_1", description = "4th Const Operand 1")
-    String constOp13 = null;
+    int constOp13 = -1;
 
     @Argument(index = 19, name = "const_op2_1", description = "4th Const Operand 2")
-    String constOp23 = null;
+    int constOp23 = -1;
 
 
     @Override
@@ -93,14 +92,11 @@ public class SetCondition extends AbstractShellCommand {
     }
 
     private EfsmCondition getEfsmCondition(
-            String operation, String op1, String op2, String constOp1, String constOp2) {
+            String operation, String op1, String op2, int constOp1, int constOp2) {
         if (operation == null || op1 == null || op2 == null) {
             return EfsmCondition.defaultEfsmCondition();
         }
         return new EfsmCondition(EfsmCondition.Operation.valueOf(operation),
-                                 Integer.parseInt(op1),
-                                 Integer.parseInt(op2),
-                                 constOp1 != null ? Optional.of(Integer.parseInt(constOp1)) : Optional.empty(),
-                                 constOp2 != null ? Optional.of(Integer.parseInt(constOp2)) : Optional.empty());
+                                 op1, op2, constOp1, constOp2);
     }
 }

@@ -1,0 +1,18 @@
+{
+  "conditions" : [
+    {
+      "operation": "NOP",
+      "operand1": "1",
+      "operand2": "2",
+      "constOperand1": 0,
+      "constOperand2": 0
+    },
+    {
+      "operation": "NOP",
+      "operand1": "1",
+      "operand2": "2",
+      "constOperand1": 0,
+      "constOperand2": 0
+    }
+  ]
+}

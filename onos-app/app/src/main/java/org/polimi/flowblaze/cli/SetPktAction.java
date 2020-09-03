@@ -21,6 +21,6 @@ public class SetPktAction extends AbstractShellCommand {
     @Override
     protected void doExecute() throws Exception {
         FlowblazeService flowblazeService = get(FlowblazeService.class);
-        flowblazeService.setupPktActions(pktActionid, actionName);
+        flowblazeService.setupPktAction(pktActionid, actionName);
     }
 }

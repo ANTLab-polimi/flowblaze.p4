@@ -1,5 +1,7 @@
 package org.polimi.flowblaze;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 import org.onosproject.net.pi.model.PiMatchFieldId;
 import org.onosproject.net.pi.model.PiMatchFieldModel;
@@ -13,13 +15,17 @@ public class EfsmMatch {
     public final Boolean condition1;
     public final Boolean condition2;
     public final Boolean condition3;
-
+    // TODO: add support for specifying the MASK for the EFSM Extra Match Fields.
+    //  For example use a list of Triple<FieldName, Value, Mask>
     public final Map<String, byte[]> efsmExtraMatchFields;
 
-    public EfsmMatch(int state,
-                     Boolean condition0, Boolean condition1,
-                     Boolean condition2, Boolean condition3,
-                     Map<String, byte[]> efsmExtraMatch) {
+    @JsonCreator
+    public EfsmMatch(@JsonProperty("state") int state,
+                     @JsonProperty("condition0") Boolean condition0,
+                     @JsonProperty("condition1") Boolean condition1,
+                     @JsonProperty("condition2") Boolean condition2,
+                     @JsonProperty("condition3") Boolean condition3,
+                     @JsonProperty("efsmExtraMatch") Map<String, byte[]> efsmExtraMatch) {
         this.state = state;
         this.condition0 = condition0;
         this.condition1 = condition1;
