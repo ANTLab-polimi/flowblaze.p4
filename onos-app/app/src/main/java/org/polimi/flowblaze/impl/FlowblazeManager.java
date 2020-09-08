@@ -1,14 +1,18 @@
 package org.polimi.flowblaze.impl;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
+import org.apache.commons.lang3.tuple.Pair;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.device.DeviceEvent;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
+import org.onosproject.net.flow.FlowEntry;
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.FlowRuleService;
+import org.onosproject.net.flow.TableId;
 import org.onosproject.net.flow.criteria.PiCriterion;
 import org.onosproject.net.pi.model.PiActionId;
 import org.onosproject.net.pi.model.PiActionParamId;
@@ -29,9 +33,9 @@ import org.polimi.flowblaze.FlowblazeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.polimi.flowblaze.FlowblazeConst.*;
 
@@ -199,11 +203,13 @@ public class FlowblazeManager implements FlowblazeService {
             criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C3, match.condition3 ? ONE : ZERO, ONE);
         }
 
-        for (Map.Entry<String, byte[]> field : match.efsmExtraMatchFields.entrySet()) {
-            byte[] matchMask = new byte[field.getValue().length];
-            Arrays.fill(matchMask, (byte) 0xFF);
+        for (Map.Entry<String, Pair<byte[], byte[]>> field : match.efsmExtraMatchFields.entrySet()) {
+            //byte[] matchMask = new byte[field.getValue().length];
+            //Arrays.fill(matchMask, (byte) 0xFF);
             // TODO: the PiMatchFieldId.of(field.getKey()) can generate an exception?
-            criterionBuilder.matchTernary(PiMatchFieldId.of(field.getKey()), field.getValue(), matchMask);
+            criterionBuilder.matchTernary(PiMatchFieldId.of(field.getKey()),
+                                          field.getValue().getLeft(),
+                                          field.getValue().getRight());
         }
 
         // Build EFSM Rule
@@ -245,6 +251,48 @@ public class FlowblazeManager implements FlowblazeService {
         }
         flowblazeDeviceId = deviceId;
     }
+
+    @Override
+    public boolean resetFlowblaze() {
+        if (flowblazeDeviceId == null) {
+            log.error("Device ID not set!");
+            return false;
+        }
+        flowRuleService.removeFlowRulesById(appId);
+        return true;
+    }
+
+    @Override
+    public boolean resetPktActions() {
+        return resetFlowRules(TABLE_PKT_ACTION);
+    }
+
+    @Override
+    public boolean resetConditions() {
+        return resetFlowRules(TABLE_CONDITION_TABLE);
+    }
+
+    @Override
+    public boolean resetEfsmEntries() {
+        return resetFlowRules(TABLE_EFSM_TABLE);
+    }
+
+    private boolean resetFlowRules(TableId tableId) {
+        if (flowblazeDeviceId == null) {
+            log.error("Device ID not set!");
+            return false;
+        }
+        List<FlowEntry> flowRules = Streams.stream(flowRuleService.getFlowEntriesById(appId))
+                .filter(flowEntry -> flowEntry.table().equals(tableId))
+                .collect(Collectors.toList());
+        if (flowRules.size() == 0) {
+            log.info("NO rule for the reset on the requested table!");
+            return false;
+        }
+        flowRuleService.removeFlowRules(flowRules.toArray(FlowRule[]::new));
+        return true;
+    }
+
 
     @Override
     public DeviceId getFlowBlazeDeviceId() {

@@ -12,9 +12,9 @@ import org.polimi.flowblaze.FlowblazeService;
 import java.util.List;
 
 @Service
-@Command(scope = "flowblaze", name = "set-condition",
+@Command(scope = "flowblaze", name = "set-conditions",
         description = "Setup EFSM conditions")
-public class SetCondition extends AbstractShellCommand {
+public class SetConditions extends AbstractShellCommand {
 
     @Argument(index = 0, name = "operation1", description = "1st Operation")
     String operation0 = null;

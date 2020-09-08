@@ -6,7 +6,7 @@
     "condition2": false,
     "condition3": false,
     "efsmExtraMatch": {
-      "hdr.ipv4.src_addr": [10, 0, 0, 1]
+      "hdr.ipv4.src_addr": "0x0a000001&&&0xFFFFFFFF"
     }
   },
   "nextState": 2,

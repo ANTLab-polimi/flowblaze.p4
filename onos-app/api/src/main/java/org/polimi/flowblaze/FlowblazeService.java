@@ -11,6 +11,15 @@ public interface FlowblazeService {
     boolean setupPktAction(byte pktAction, String action);
     void setFlowblazeDeviceId(DeviceId deviceId);
 
+    boolean resetFlowblaze();
+
+
+    boolean resetPktActions();
+
+    boolean resetConditions();
+
+    boolean resetEfsmEntries();
+
     DeviceId getFlowBlazeDeviceId();
 
 }

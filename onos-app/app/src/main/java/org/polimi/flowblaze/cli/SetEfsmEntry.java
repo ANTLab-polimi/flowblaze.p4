@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-@Command(scope = "flowblaze", name = "set-efsmentry",
+@Command(scope = "flowblaze", name = "set-efsm_entry",
         description = "Setup EFSM Table Entry")
 public class SetEfsmEntry extends AbstractShellCommand {
 
@@ -45,8 +45,9 @@ public class SetEfsmEntry extends AbstractShellCommand {
     @Option(name = "-efsmExtraMatchField", description = "EFSM Extra Match field")
     String efsmExtraMatchField = null;
 
-    @Option(name = "-efsmExtraMatchFieldValue", description = "EFSM Extra Match field value")
-    byte[] efsmExtraMatchFieldValue = null;
+    @Option(name = "-efsmExtraMatchFieldValueMask",
+            description = "EFSM Extra Match field value with mask (VALUE&&&MASK)")
+    String efsmExtraMatchFieldValueMask = null;
 
 
     @Option(name = "-operation0", description = "1st Operation")
@@ -114,9 +115,9 @@ public class SetEfsmEntry extends AbstractShellCommand {
         operations.add(getEfsmOperation(operation2, result2, op12, op22, constOp12, constOp22));
         FlowblazeService flowblazeService = get(FlowblazeService.class);
 
-        Map<String, byte[]> efsmExtraMatch = Maps.newHashMap();
-        if (efsmExtraMatchField != null && efsmExtraMatchFieldValue != null) {
-            efsmExtraMatch.put(efsmExtraMatchField, efsmExtraMatchFieldValue);
+        Map<String, String> efsmExtraMatch = Maps.newHashMap();
+        if (efsmExtraMatchField != null && efsmExtraMatchFieldValueMask != null) {
+            efsmExtraMatch.put(efsmExtraMatchField, efsmExtraMatchFieldValueMask);
         }
         EfsmMatch match = new EfsmMatch(currentState, condition0, condition1, condition2, condition3, efsmExtraMatch);
         flowblazeService.setupEfsmTable(match, nextState, operations, pktAction);

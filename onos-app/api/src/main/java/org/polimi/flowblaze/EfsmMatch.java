@@ -3,9 +3,13 @@ package org.polimi.flowblaze;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
+import com.google.common.io.BaseEncoding;
+import org.apache.commons.lang3.tuple.Pair;
 import org.onosproject.net.pi.model.PiMatchFieldId;
 import org.onosproject.net.pi.model.PiMatchFieldModel;
 import org.onosproject.net.pi.model.PiPipeconf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -15,9 +19,9 @@ public class EfsmMatch {
     public final Boolean condition1;
     public final Boolean condition2;
     public final Boolean condition3;
-    // TODO: add support for specifying the MASK for the EFSM Extra Match Fields.
-    //  For example use a list of Triple<FieldName, Value, Mask>
-    public final Map<String, byte[]> efsmExtraMatchFields;
+    public final Map<String, Pair<byte[], byte[]>> efsmExtraMatchFields;
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @JsonCreator
     public EfsmMatch(@JsonProperty("state") int state,
@@ -25,13 +29,14 @@ public class EfsmMatch {
                      @JsonProperty("condition1") Boolean condition1,
                      @JsonProperty("condition2") Boolean condition2,
                      @JsonProperty("condition3") Boolean condition3,
-                     @JsonProperty("efsmExtraMatch") Map<String, byte[]> efsmExtraMatch) {
+                     @JsonProperty("efsmExtraMatch") Map<String, String> efsmExtraMatch) {
         this.state = state;
         this.condition0 = condition0;
         this.condition1 = condition1;
         this.condition2 = condition2;
         this.condition3 = condition3;
-        this.efsmExtraMatchFields = efsmExtraMatch;
+        this.efsmExtraMatchFields = Maps.asMap(efsmExtraMatch.keySet(), key ->
+                extractFieldAndMask(efsmExtraMatch.get(key)));
     }
 
     /**
@@ -45,12 +50,21 @@ public class EfsmMatch {
         pipeconf.pipelineModel().table(FlowblazeConst.TABLE_EFSM_TABLE).get()
                 .matchFields().forEach(matchField -> pipeconfSupportedEfsmMatch.put(matchField.id(), matchField));
 
-        for (Map.Entry<String, byte[]> field : efsmExtraMatchFields.entrySet()) {
+        for (Map.Entry<String, Pair<byte[], byte[]>> field : efsmExtraMatchFields.entrySet()) {
             PiMatchFieldId fieldId = PiMatchFieldId.of(field.getKey());
             if (!pipeconfSupportedEfsmMatch.containsKey(fieldId)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private Pair<byte[], byte[]> extractFieldAndMask(String fieldMask) {
+        String value = fieldMask.split("&&&")[0]
+                .replaceAll("0x", "").toUpperCase();
+        String mask = fieldMask.split("&&&")[1]
+                .replaceAll("0x", "").toUpperCase();
+        return Pair.of(BaseEncoding.base16().decode(value),
+                       BaseEncoding.base16().decode(mask));
     }
 }

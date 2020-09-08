@@ -1,19 +1,3 @@
-/*
- * Copyright 2017-present Open Networking Foundation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.polimi.flowblaze.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -31,6 +15,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -45,6 +30,7 @@ import static org.polimi.flowblaze.FlowblazeConst.MAX_OPERATIONS;
  */
 @Path("flowblaze")
 public class FlowblazeWebResource extends AbstractWebResource {
+    //TODO: add swagger documentation
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -190,6 +176,64 @@ public class FlowblazeWebResource extends AbstractWebResource {
         DeviceId devId = flowblazeService.getFlowBlazeDeviceId();
         ObjectNode result = new ObjectMapper().createObjectNode();
         result.put("DeviceId", devId != null ? devId.toString() : "none");
+        return ok(result.toString()).build();
+    }
+
+    @GET
+    @Path("resetFlowblaze")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response resetFlowblaze() {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = new ObjectMapper().createObjectNode();
+        if (flowblazeService.resetFlowblaze()) {
+            result.put("response", "Error when resetting FlowBlaze device");
+        }
+        return ok(result.toString()).build();
+    }
+
+    @GET
+    @Path("resetConditions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response resetConditions() {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = new ObjectMapper().createObjectNode();
+        if (flowblazeService.resetConditions()) {
+            result.put("response", "Error when resetting conditions");
+        }
+        return ok(result.toString()).build();
+    }
+
+    @GET
+    @Path("resetEfsmEntries")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response resetEfsmEntries() {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = new ObjectMapper().createObjectNode();
+        if (flowblazeService.resetConditions()) {
+            result.put("response", "Error when resetting EFSM entries");
+        }
+        return ok(result.toString()).build();
+    }
+
+    @GET
+    @Path("resetPktActions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response resetPktActions() {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        ObjectNode result = new ObjectMapper().createObjectNode();
+        if (flowblazeService.resetPktActions()) {
+            result.put("response", "Error when resetting packet actions");
+        }
+        return ok(result.toString()).build();
+    }
+
+    @GET
+    @Path("setDeviceId/{deviceId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setDeviceId(@PathParam("deviceId") String deviceId) {
+        FlowblazeService flowblazeService = get(FlowblazeService.class);
+        flowblazeService.setFlowblazeDeviceId(DeviceId.deviceId(deviceId));
+        ObjectNode result = new ObjectMapper().createObjectNode();
         return ok(result.toString()).build();
     }
 }

@@ -8,7 +8,7 @@ import org.onosproject.cli.AbstractShellCommand;
 import org.polimi.flowblaze.FlowblazeService;
 
 @Service
-@Command(scope = "flowblaze", name = "set-pktaction",
+@Command(scope = "flowblaze", name = "set-pkt_action",
         description = "Setup Packet Action")
 public class SetPktAction extends AbstractShellCommand {
 
