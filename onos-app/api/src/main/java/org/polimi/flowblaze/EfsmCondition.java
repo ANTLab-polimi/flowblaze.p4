@@ -33,7 +33,7 @@ public class EfsmCondition {
                 this.constOperand1 = 0;
                 break;
             default:
-                this.operand1 = Byte.parseByte(op1);
+                this.operand1 = stringToByte(op1);
                 this.constOperand1 = 0;
                 break;
         }
@@ -51,11 +51,20 @@ public class EfsmCondition {
                 this.constOperand2 = 0;
                 break;
             default:
-                this.operand2 = Byte.parseByte(op2);
+                this.operand2 = stringToByte(op2);
                 this.constOperand2 = 0;
                 break;
         }
         this.operation = op;
+    }
+
+    private byte stringToByte(String value) {
+        if (value.contains("0x")) {
+            // Remove 0x from the string
+            value = value.replaceAll("0x", "");
+            return (byte) (Integer.parseInt(value, 16) & 0xff);
+        }
+        return (byte) (Integer.parseInt(value) & 0xff);
     }
 
     public static EfsmCondition defaultEfsmCondition() {

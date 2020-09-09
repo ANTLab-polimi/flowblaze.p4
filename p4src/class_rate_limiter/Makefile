@@ -97,7 +97,7 @@ start-gui: stop-gui build-p4
 		-v ${curr_dir}/../../p4src:/p4src \
 		-p 8000:8000 \
 		-w /flowblazeGui ${FLASK_IMG} \
-		/bin/sh -c 'python gui.py --p4_file /p4src/${project_name}/${project_name}.p4 --json_file /p4src/${project_name}/p4build/bmv2.json'
+		/bin/sh -c 'python gui.py --p4_file /p4src/${project_name}/${project_name}.p4 --json_file /p4src/${project_name}/p4build/bmv2.json --debug'
 	@echo "*** The GUI is accessible from http://localhost:8000"
 
 gui-log:

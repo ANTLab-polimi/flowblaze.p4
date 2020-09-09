@@ -35,8 +35,12 @@ public class EfsmMatch {
         this.condition1 = condition1;
         this.condition2 = condition2;
         this.condition3 = condition3;
-        this.efsmExtraMatchFields = Maps.asMap(efsmExtraMatch.keySet(), key ->
-                extractFieldAndMask(efsmExtraMatch.get(key)));
+        if (efsmExtraMatch == null) {
+            this.efsmExtraMatchFields = Maps.newHashMap();
+        } else {
+            this.efsmExtraMatchFields = Maps.asMap(efsmExtraMatch.keySet(), key ->
+                    extractFieldAndMask(efsmExtraMatch.get(key)));
+        }
     }
 
     /**

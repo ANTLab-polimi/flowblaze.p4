@@ -54,7 +54,7 @@ public class SetEfsmEntry extends AbstractShellCommand {
     String operation0 = null;
 
     @Option(name = "-result_0", description = "1st Result")
-    byte result0 = -1;
+    String result0 = null;
 
     @Option(name = "-op1_0", description = "1st Operand 1")
     String op10 = null;
@@ -73,7 +73,7 @@ public class SetEfsmEntry extends AbstractShellCommand {
     String operation1 = null;
 
     @Option(name = "-result_1", description = "2nd Result")
-    byte result1 = -1;
+    String result1 = null;
 
     @Option(name = "-op1_1", description = "2nd Operand 1")
     String op11 = null;
@@ -92,7 +92,7 @@ public class SetEfsmEntry extends AbstractShellCommand {
     String operation2 = null;
 
     @Option(name = "-result_2", description = "3rd Result")
-    byte result2 = -1;
+    String result2 = null;
 
     @Option(name = "-op1_2", description = "3rd Operand 1")
     String op12 = null;
@@ -124,8 +124,8 @@ public class SetEfsmEntry extends AbstractShellCommand {
     }
 
     private EfsmOperation getEfsmOperation(
-            String operation, byte result, String op1, String op2, int constOp1, int constOp2) {
-        if (operation == null || op1 == null || op2 == null || result == -1) {
+            String operation, String result, String op1, String op2, int constOp1, int constOp2) {
+        if (operation == null || op1 == null || op2 == null || result == null) {
             return EfsmOperation.defaultEfsmOperation();
         }
         return new EfsmOperation(EfsmOperation.Operation.valueOf(operation),

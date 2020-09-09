@@ -9,20 +9,29 @@ OPERATIONS = {
     "*":    '0x05',    # _MUL = 0x05
 }
 
+ONOS_OPERATIONS = {
+    "0x00": '0x00',
+    "0x01": 'PLUS',
+    "0x02": 'MINUS',
+    "0x03": 'R_SHIFT',
+    "0x04": 'L_SHIFT',
+    "0x05": 'MUL',
+}
+
 REGISTERS = {
       '@meta': '0xF1',     # _META = 0xF1
       '@now':  '0xF2',     # _TIME_NOW = 0xF2
       'EXPL':  '0xFF',     # _EXPL = 0xFF
 }
 
+ONOS_REGISTERS = {
+      '0xF1': 'META',
+      '0xF2': 'NOW',
+      '0xFF': 'CONST',
+}
+
 FDV_BASE_REGISTER = 0x00
 GDV_BASE_REGISTER = 0x0F
-
-META = {
-      '@meta': '0xF1',     # _META = 0xF1
-      '@now':  '0xF2',     # _TIME_NOW = 0xF2
-      'EXPL':  '0xFF',     # _EXPL = 0xFF
-}
 
 CONDITIONS = OrderedDict([
     ("NOP"  ,   '0b000'),    # NO_CONDITION  = 0b000
@@ -32,6 +41,14 @@ CONDITIONS = OrderedDict([
     ('>'    ,   '0b010'),    # CONDITION_GT  = 0b010
     ('<'    ,   '0b100'),    # CONDITION_LT  = 0b100
 ])
+ONOS_CONDITIONS = {
+    '0b000':   'NOP',
+    '0b001':   'EQ',
+    '0b011':   'GTE',
+    '0b101':   'LTE',
+    '0b010':   'GT',
+    '0b100':   'LT',
+}
 
 DEFAULT_PRIO_EFSM = "1"
 

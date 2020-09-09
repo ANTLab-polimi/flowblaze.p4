@@ -18,7 +18,7 @@ public class EfsmOperation {
     public EfsmOperation(@JsonProperty("operation") EfsmOperation.Operation op,
                          @JsonProperty("operand1") String op1,
                          @JsonProperty("operand2") String op2,
-                         @JsonProperty("result") byte result,
+                         @JsonProperty("result") String result,
                          @JsonProperty("constOperand1") int constOp1,
                          @JsonProperty("constOperand2")int constOp2) {
         switch (op1) {
@@ -35,7 +35,7 @@ public class EfsmOperation {
                 this.constOperand1 = 0;
                 break;
             default:
-                this.operand1 = Byte.parseByte(op1);
+                this.operand1 = stringToByte(op1);
                 this.constOperand1 = 0;
                 break;
         }
@@ -53,16 +53,25 @@ public class EfsmOperation {
                 this.constOperand2 = 0;
                 break;
             default:
-                this.operand2 = Byte.parseByte(op2);
+                this.operand2 = stringToByte(op2);
                 this.constOperand2 = 0;
                 break;
         }
-        this.result = result;
+        this.result = stringToByte(result);
         this.operation = op;
     }
 
+    private byte stringToByte(String value) {
+        if (value.contains("0x")) {
+            // Remove 0x from the string
+            value = value.replaceAll("0x", "");
+            return (byte) (Integer.parseInt(value, 16) & 0xff);
+        }
+        return (byte) (Integer.parseInt(value) & 0xff);
+    }
+
     public static EfsmOperation defaultEfsmOperation() {
-        return new EfsmOperation(EfsmOperation.Operation.NOP, "0", "0", (byte) 0, 0, 0);
+        return new EfsmOperation(EfsmOperation.Operation.NOP, "0", "0",  "0", 0, 0);
     }
 
     public enum Operation {

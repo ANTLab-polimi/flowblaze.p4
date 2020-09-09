@@ -4,11 +4,12 @@ import json
 import logging
 import re
 
-from config import TEMPLATE_CONDITION, META, OPERATIONS, TEMPLATE_ACTION, \
+from config import TEMPLATE_CONDITION, OPERATIONS, TEMPLATE_ACTION, \
     TEMPLATE_PACKET_ACTION, CONDITIONS, TEMPLATE_SET_DEFAULT_condition_table, REGISTERS, \
     TEMPLATE_SET_DEFAULT_EFSMTable, TEMPLATE_SET_PACKET_ACTIONS, DEFAULT_PRIO_EFSM, EQUAL, \
     MAX_CONDITIONS_NUM, MAX_REG_ACTIONS_PER_TRANSITION, REG_ACTION_REGEX, COND_REGEX, \
-    FDV_BASE_REGISTER, GDV_BASE_REGISTER, PKT_ACTION_REGEX
+    FDV_BASE_REGISTER, GDV_BASE_REGISTER, PKT_ACTION_REGEX, ONOS_CONDITIONS, ONOS_REGISTERS, ONOS_OPERATIONS
+from onos_json_template import json_condition, json_match, json_efsm_entry, json_operation, json_pkt_action
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ def normalized_reg_actions(reg_actions):
 
     return normalized_reg_act
 
+
 def parse_condition(cond):
     m = re.match(COND_REGEX, cond)
     if m:
@@ -52,6 +54,7 @@ def parse_condition(cond):
         return op1, cond, op2
     else:
         return None
+
 
 def parse_reg_action(action):
     m = re.match(REG_ACTION_REGEX, action)
@@ -64,6 +67,7 @@ def parse_reg_action(action):
     else:
         return None
 
+
 def parse_pkt_action(action):
     m = re.match(PKT_ACTION_REGEX, action)
     if m:
@@ -73,18 +77,27 @@ def parse_pkt_action(action):
     else:
         return None
 
+
 def fdv_register(reg_id):
     return '0x%02X' % (FDV_BASE_REGISTER + reg_id)
 
+
 def gdv_register(reg_id):
-    return '0x%02X' % (GDV_BASE_REGISTER + (reg_id<<4))
+    return '0x%02X' % (GDV_BASE_REGISTER + (reg_id << 4))
+
 
 def invalid_transition_str(edge):
     return 'Invalid transition ({})->({}): "{}"'.format(edge['src'], edge['dst'], edge['transition'])
 
+
 def interpret_EFSM(json_str, packet_actions, efsm_match):
     cli_config = ''
     dbg_msg = ''
+    json_onos = {
+        'conditions': [],
+        'efsmEntries': [],
+        'pktActions': []
+    }
 
     nodes = json_str['nodes']
     links = json_str['links']
@@ -113,6 +126,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             continue
         tmp = link['text'].split('|')
 
+        e['match_field'] = []
         matches = list(filter(lambda m: len(m) > 0, tmp[0].split(';')))
         if len(matches) == 0:
             e['match'] = no_efsm_matches
@@ -125,6 +139,8 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         dbg_msg += 'Cannot parse EFSM packet header matches: "%s"\n' % matches[i]
                         return None, dbg_msg
                     e['match'].append(matches[i].split("==")[1])
+                    # Save also the field name, useful for ONOS JSON configuration
+                    e['match_field'].append(matches[i].split("==")[0])
                     i += 1
                 else:
                     e['match'].append("0&&&0")
@@ -242,15 +258,19 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             e['pkt_action'] = None
             if link['type'] == 'Link':
                 logger.warning(
-                    "No action specified for ({})->({}) transition '{}': default action will be applied".format(e['src'], e['dst'],
-                                                                                                  e['transition']))
-                dbg_msg += "No action specified for ({})->({}) transition '{}': default action will be applied\n".format(e['src'], e['dst'],
-                                                                                                  e['transition'])
+                    "No action specified for ({})->({}) transition '{}': default action will be applied".format(
+                        e['src'], e['dst'],
+                        e['transition']))
+                dbg_msg += "No action specified for ({})->({}) transition '{}': default action will be applied\n".format(
+                    e['src'], e['dst'],
+                    e['transition'])
             else:
                 logger.warning(
-                    "No action specified for self-transition in state ({}) '{}': default action will be applied".format(e['src'], e[
-                        'transition']))
-                dbg_msg += "No action specified for self-transition in state ({}) '{}': default action will be applied\n".format(e['src'], e[
+                    "No action specified for self-transition in state ({}) '{}': default action will be applied".format(
+                        e['src'], e[
+                            'transition']))
+                dbg_msg += "No action specified for self-transition in state ({}) '{}': default action will be applied\n".format(
+                    e['src'], e[
                         'transition'])
 
         edges.append(e)
@@ -285,7 +305,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     pkt_actions_list.sort()
     pkt_actions = dict(enumerate(pkt_actions_list))
     # k+1 is needed to differentiate a un-initialized metadata (that is 0) and an action (that has to be different from 0)
-    pkt_actions_reverse = {v: k+1 for k, v in pkt_actions.items()}
+    pkt_actions_reverse = {v: k + 1 for k, v in pkt_actions.items()}
     logger.debug("Reversed packet actions: {}".format(pkt_actions_reverse))
 
     conditions_parsed = {}
@@ -321,7 +341,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         dbg_msg += 'Unknown global data variable "%s"\n' % op
                         dbg_msg += 'Fatal error while parsing condition "%s"\n' % c
                         return None, dbg_msg
-                elif op[0] == '@' and op in META:
+                elif op[0] == '@' and op in REGISTERS:
                     # It is a META (NOW, META)
                     tmp_cond['op%d' % op_id] = REGISTERS[op]
                 else:
@@ -390,7 +410,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         dbg_msg += 'Unknown global data variable "%s"\n' % op
                         dbg_msg += 'Fatal error while parsing reg action "%s"\n' % a
                         return None, dbg_msg
-                elif op[0] == '@' and op in META:
+                elif op[0] == '@' and op in REGISTERS:
                     # It is a META (NOW, META)
                     tmp_action['op%d' % op_id] = REGISTERS[op]
                 else:
@@ -445,12 +465,23 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     lst_cond.sort(key=lambda x: x[0])
     cond_table_config = copy.deepcopy(TEMPLATE_SET_DEFAULT_condition_table)
     for cond in lst_cond:
-        cond_table_config += ' ' + str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(cond[2]['op2']) + ' ' + str(
+        cond_table_config += ' ' + str(cond[2]['cond']) + ' ' + str(cond[2]['op1']) + ' ' + str(
+            cond[2]['op2']) + ' ' + str(
             cond[2]['operand1']) + ' ' + str(cond[2]['operand2'])
     # Fill-up the cond_table_config to have the 20 parameters required
     for _ in range(len(lst_cond), MAX_CONDITIONS_NUM):
         cond_table_config += ' ' + CONDITIONS["NOP"] + ' 0 0 0 0'
-    cli_config += cond_table_config +"\n"
+    cli_config += cond_table_config + "\n"
+
+    # ONOS JSON CONFIG
+    for cond in lst_cond:
+        json_cond = copy.deepcopy(json_condition)
+        json_cond["operation"] = ONOS_CONDITIONS.get(cond[2]['cond'], 'NOP')
+        json_cond["operand1"] = ONOS_REGISTERS.get(str(cond[2]['op1']), str(cond[2]['op1']))
+        json_cond["operand2"] = ONOS_REGISTERS.get(str(cond[2]['op2']), str(cond[2]['op2']))
+        json_cond["constOperand1"] = cond[2]['operand1']
+        json_cond["constOperand2"] = cond[2]['operand2']
+        json_onos["conditions"].append(json_cond)
     # --------------------------------------------------------------------------------------------------------------
 
     # ------------------------------- Generate entries for the EFSM table ------------------------------------------
@@ -466,6 +497,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         }
 
         # Map condition on the edge with the previously generated condition variable
+        # This works because we are not considering a match on a False condition
         for c in lst_cond:
             if c[1] in e['condition']:
                 if c[0] == 0:
@@ -486,7 +518,6 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             tmp['operand1_' + str(cnt)] = r_a['operand1']
             tmp['operand2_' + str(cnt)] = r_a['operand2']
             cnt += 1
-        logger.info("CNT: %i" % cnt)
         # Fill up with empty value the unused register update actions
         for i in range(cnt, MAX_REG_ACTIONS_PER_TRANSITION):
             tmp['operation_' + str(i)] = OPERATIONS['NOP']
@@ -509,6 +540,50 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         tmp['priority'] = DEFAULT_PRIO_EFSM  # Default priority
 
         cli_config += TEMPLATE_SET_DEFAULT_EFSMTable.format(**tmp) + "\n"
+
+    # ONOS JSON config
+    for e in edges:
+        logger.info("E: %s" % str(e))
+        onos_efsm_entry = copy.deepcopy(json_efsm_entry)
+
+        onos_match = copy.deepcopy(json_match)
+        onos_match["state"] = e['src']
+        for c in lst_cond:
+            if c[1] in e['condition']:
+                if c[0] == 0:
+                    onos_match['condition0'] = True
+                elif c[0] == 1:
+                    onos_match['condition1'] = True
+                elif c[0] == 2:
+                    onos_match['condition2'] = True
+                elif c[0] == 3:
+                    onos_match['condition3'] = True
+        extra_match = dict()
+        i = 0
+        for m in e["match_field"]:
+            extra_match[m] = e["match"][i]
+            i += 1
+        if len(extra_match) > 0:
+            onos_match["efsmExtraMatch"] = extra_match
+        onos_efsm_entry["match"] = onos_match
+
+        onos_efsm_entry["nextState"] = e['dst']
+
+        # By default, json_efsm_entry has 0 in pkt_action field
+        if e['pkt_action']:
+            onos_efsm_entry["pktAction"] = pkt_actions_reverse[e['pkt_action']]
+
+        for r_a in e['reg_action_parsed']:
+            onos_operation = copy.deepcopy(json_operation)
+            onos_operation["operation"] = ONOS_OPERATIONS[r_a['operation']]
+            onos_operation["result"] = r_a['result']
+            onos_operation["operand1"] = ONOS_REGISTERS.get(str(r_a['op1']), str(r_a['op1']))
+            onos_operation["operand2"] = ONOS_REGISTERS.get(str(r_a['op2']), str(r_a['op2']))
+            onos_operation["constOperand1"] = r_a['operand1']
+            onos_operation["constOperand2"] = r_a['operand2']
+            onos_efsm_entry["operations"].append(onos_operation)
+
+        json_onos["efsmEntries"].append(onos_efsm_entry)
     # --------------------------------------------------------------------------------------------------------------
 
     # --------------------------------- Set the actual packet actions in the pkt_actions table ---------------------
@@ -516,10 +591,22 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         action = packet_actions_parsed[pkt_a]['name']
         action_parameters = ' '.join(packet_actions_parsed[pkt_a]['parameters'])
         # i+1 is needed to differentiate a un-initialized metadata (that is 0) and an action (that has to be different from 0)
-        cli_config += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i+1)) + "&&&0xFF",
-                                                     action_parameters=action_parameters, priority='10') + "\n"
+        cli_config += TEMPLATE_SET_PACKET_ACTIONS.format(action=action, action_match=str(hex(i + 1)) + "&&&0xFF",
+                                                         action_parameters=action_parameters, priority='10') + "\n"
+    logging.info("PKT_ACTIONS %s", str(pkt_actions))
+    logging.info("PKT_ACTIONS_PARSED %s", str(packet_actions_parsed))
+    # ONOS JSON CONFIG
+    for (i, pkt_a) in pkt_actions.items():
+        if len(packet_actions_parsed[pkt_a]['parameters']) == 0:
+            dbg_msg = "ACTION WITH PARAMTERS NOT SUPPORTED IN ONOS!\n" + dbg_msg
+        else:
+            onos_pkt_action = copy.deepcopy(json_pkt_action)
+            onos_pkt_action["action"] = "FabricIngress.FlowBlazeLoop." + pkt_a.split("(")[0]
+            onos_pkt_action["id"] = i + 1
+            json_onos["pktActions"].append(onos_pkt_action)
+    logger.info("JSON_ONOS: %s" % str(json_onos))
     # --------------------------------------------------------------------------------------------------------------
-    dbg_msg += '-'*80 + '\n'
+    dbg_msg += '-' * 80 + '\n'
     dbg_msg += 'Flow data variables: '
     if len(flow_data_variables) > 0:
         dbg_msg += ', '.join(map(str, flow_data_variables.values()))
@@ -531,12 +618,12 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     else:
         dbg_msg += 'none'
     dbg_msg += '\n'
-    dbg_msg += '-'*80 + '\n'
+    dbg_msg += '-' * 80 + '\n'
     dbg_msg += cli_config
 
     logger.debug("Generated entries:\n{}".format(cli_config))
 
-    return cli_config, dbg_msg
+    return cli_config, dbg_msg, json_onos
 
 
 if __name__ == '__main__':
@@ -560,7 +647,8 @@ if __name__ == '__main__':
     with open(input_file, "r") as in_f:
         input_json = json.loads(in_f.read())
 
-    cli_config, dbg_msg = interpret_EFSM(json_str=input_json, packet_actions=EXAMPLE_PACKET_ACTION, efsm_match=EXAMPLE_EFSM_MATCH_HEADER)
+    cli_config, dbg_msg, _ = interpret_EFSM(json_str=input_json, packet_actions=EXAMPLE_PACKET_ACTION,
+                                            efsm_match=EXAMPLE_EFSM_MATCH_HEADER)
     if not cli_config:
         logging.error("Failed to parse %s" % input_file)
     else:
