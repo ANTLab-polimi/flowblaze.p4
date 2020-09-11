@@ -7,12 +7,14 @@ import java.util.List;
 public interface FlowblazeService {
 
     boolean setupConditions(List<EfsmCondition> conditions);
+
     boolean setupEfsmTable(EfsmMatch match, int nextState, List<EfsmOperation> operations, byte pktAction);
+
     boolean setupPktAction(byte pktAction, String action);
-    void setFlowblazeDeviceId(DeviceId deviceId);
+
+    boolean setFlowblazeDeviceId(DeviceId deviceId);
 
     boolean resetFlowblaze();
-
 
     boolean resetPktActions();
 

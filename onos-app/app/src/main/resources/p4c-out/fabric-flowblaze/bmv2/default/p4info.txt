@@ -3,37 +3,37 @@ pkg_info {
 }
 tables {
   preamble {
-    id: 33575896
-    name: "FabricIngress.FlowBlazeLoop.EFSM_table"
+    id: 33589850
+    name: "FlowBlaze.EFSM_table"
     alias: "EFSM_table"
   }
   match_fields {
     id: 1
-    name: "meta.flowblaze_metadata.state"
+    name: "FlowBlaze.state"
     bitwidth: 16
     match_type: TERNARY
   }
   match_fields {
     id: 2
-    name: "meta.flowblaze_metadata.c0"
+    name: "FlowBlaze.condition0"
     bitwidth: 1
     match_type: TERNARY
   }
   match_fields {
     id: 3
-    name: "meta.flowblaze_metadata.c1"
+    name: "FlowBlaze.condition1"
     bitwidth: 1
     match_type: TERNARY
   }
   match_fields {
     id: 4
-    name: "meta.flowblaze_metadata.c2"
+    name: "FlowBlaze.condition2"
     bitwidth: 1
     match_type: TERNARY
   }
   match_fields {
     id: 5
-    name: "meta.flowblaze_metadata.c3"
+    name: "FlowBlaze.condition3"
     bitwidth: 1
     match_type: TERNARY
   }
@@ -44,66 +44,66 @@ tables {
     match_type: TERNARY
   }
   action_refs {
-    id: 16814139
+    id: 16813096
   }
   action_refs {
     id: 16800567
   }
-  direct_resource_ids: 318784717
+  direct_resource_ids: 318782939
   size: 1024
 }
 tables {
   preamble {
-    id: 33577630
-    name: "FabricIngress.FlowBlazeLoop.context_lookup"
+    id: 33569535
+    name: "FlowBlaze.context_lookup"
     alias: "context_lookup"
   }
   action_refs {
-    id: 16822113
+    id: 16801598
   }
   action_refs {
     id: 16800567
   }
-  direct_resource_ids: 318785383
+  direct_resource_ids: 318809509
   size: 1024
 }
 tables {
   preamble {
-    id: 33609531
-    name: "FabricIngress.FlowBlazeLoop.condition_table"
+    id: 33613430
+    name: "FlowBlaze.condition_table"
     alias: "condition_table"
   }
   action_refs {
-    id: 16795214
+    id: 16815381
   }
   action_refs {
     id: 16800567
   }
-  direct_resource_ids: 318832195
+  direct_resource_ids: 318775650
   size: 1024
 }
 tables {
   preamble {
-    id: 33597786
-    name: "FabricIngress.FlowBlazeLoop.pkt_action"
+    id: 33599762
+    name: "FlowBlaze.pkt_action"
     alias: "pkt_action"
   }
   match_fields {
     id: 1
-    name: "meta.flowblaze_metadata.pkt_action"
+    name: "FlowBlaze.pkt_action"
     bitwidth: 8
     match_type: TERNARY
   }
   action_refs {
-    id: 16830889
+    id: 16791550
   }
   action_refs {
-    id: 16824823
+    id: 16840174
   }
   action_refs {
     id: 16800567
   }
-  direct_resource_ids: 318795541
+  direct_resource_ids: 318808634
   size: 1024
 }
 tables {
@@ -514,8 +514,8 @@ actions {
 }
 actions {
   preamble {
-    id: 16814139
-    name: "FabricIngress.FlowBlazeLoop.define_operation_update_state"
+    id: 16813096
+    name: "FlowBlaze.define_operation_update_state"
     alias: "define_operation_update_state"
   }
   params {
@@ -621,15 +621,15 @@ actions {
 }
 actions {
   preamble {
-    id: 16822113
-    name: "FabricIngress.FlowBlazeLoop.lookup_context_table"
+    id: 16801598
+    name: "FlowBlaze.lookup_context_table"
     alias: "lookup_context_table"
   }
 }
 actions {
   preamble {
-    id: 16795214
-    name: "FabricIngress.FlowBlazeLoop.set_condition_fields"
+    id: 16815381
+    name: "FlowBlaze.set_condition_fields"
     alias: "set_condition_fields"
   }
   params {
@@ -735,16 +735,16 @@ actions {
 }
 actions {
   preamble {
-    id: 16830889
-    name: "FabricIngress.FlowBlazeLoop.forward"
+    id: 16791550
+    name: "FlowBlaze.forward"
     alias: "forward"
   }
 }
 actions {
   preamble {
-    id: 16824823
-    name: "FabricIngress.FlowBlazeLoop.drop"
-    alias: "FlowBlazeLoop.drop"
+    id: 16840174
+    name: "FlowBlaze.drop"
+    alias: "FlowBlaze.drop"
   }
 }
 actions {
@@ -1024,47 +1024,47 @@ counters {
 }
 direct_counters {
   preamble {
-    id: 318784717
-    name: "FabricIngress.FlowBlazeLoop.EFSM_table_counter"
+    id: 318782939
+    name: "FlowBlaze.EFSM_table_counter"
     alias: "EFSM_table_counter"
   }
   spec {
     unit: BOTH
   }
-  direct_table_id: 33575896
+  direct_table_id: 33589850
 }
 direct_counters {
   preamble {
-    id: 318785383
-    name: "FabricIngress.FlowBlazeLoop.context_lookup_counter"
+    id: 318809509
+    name: "FlowBlaze.context_lookup_counter"
     alias: "context_lookup_counter"
   }
   spec {
     unit: BOTH
   }
-  direct_table_id: 33577630
+  direct_table_id: 33569535
 }
 direct_counters {
   preamble {
-    id: 318832195
-    name: "FabricIngress.FlowBlazeLoop.condition_table_counter"
+    id: 318775650
+    name: "FlowBlaze.condition_table_counter"
     alias: "condition_table_counter"
   }
   spec {
     unit: BOTH
   }
-  direct_table_id: 33609531
+  direct_table_id: 33613430
 }
 direct_counters {
   preamble {
-    id: 318795541
-    name: "FabricIngress.FlowBlazeLoop.pkt_action_counter"
+    id: 318808634
+    name: "FlowBlaze.pkt_action_counter"
     alias: "pkt_action_counter"
   }
   spec {
     unit: BOTH
   }
-  direct_table_id: 33597786
+  direct_table_id: 33599762
 }
 direct_counters {
   preamble {

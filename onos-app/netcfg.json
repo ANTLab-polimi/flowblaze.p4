@@ -28,7 +28,7 @@
         }
       },
       "basic": {
-        "managementAddress": "grpc://172.17.0.2:50001?device_id=1",
+        "managementAddress": "grpc://mininet:50001?device_id=1",
         "driver": "bmv2",
         "pipeconf": "org.polimi.fabric-flowblaze"
       },

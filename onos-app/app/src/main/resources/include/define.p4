@@ -19,6 +19,14 @@
 
 #define MAX_PORTS 511
 
+#if defined(WITH_INT_SOURCE) || defined(WITH_INT_TRANSIT) || defined(WITH_INT_SINK)
+#define WITH_INT
+#endif
+
+#if defined(WITH_BNG)
+#define WITH_DOUBLE_VLAN_TERMINATION
+#endif
+
 #ifndef WITHOUT_XCONNECT
 #define WITH_XCONNECT
 #endif
@@ -103,6 +111,14 @@ const spgw_interface_t SPGW_IFACE_CORE = 8w2;
 const direction_t SPGW_DIR_UNKNOWN = 2w0;
 const direction_t SPGW_DIR_UPLINK = 2w1;
 const direction_t SPGW_DIR_DOWNLINK = 2w2;
+
+#ifndef S1U_SGW_PREFIX
+// By default spgw.p4 expects uplink packets with IP dst matching 140.0.0.0/8
+// FIXME: refactor pipeline to remove dependency on this value or allow setting it at runtime
+//  (e.g. via parser value sets)
+#define S1U_SGW_PREFIX (8w140++8w0++8w0++8w0)
+#define S1U_SGW_PREFIX_LEN 8
+#endif
 
 const bit<16> ETHERTYPE_QINQ = 0x88A8;
 const bit<16> ETHERTYPE_QINQ_NON_STD = 0x9100;

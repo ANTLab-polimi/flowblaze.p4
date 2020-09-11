@@ -122,6 +122,47 @@ const bit<8> UDP_HEADER_LEN = 8;
 action nop() {
     NoAction();
 }
+struct int_metadata_t {
+    bool    source;
+    bool    transit;
+    bool    sink;
+    bit<32> switch_id;
+    bit<8>  new_words;
+    bit<16> new_bytes;
+    bit<32> ig_tstamp;
+    bit<32> eg_tstamp;
+}
+
+header int_header_t {
+    bit<2>  ver;
+    bit<2>  rep;
+    bit<1>  c;
+    bit<1>  e;
+    bit<5>  rsvd1;
+    bit<5>  ins_cnt;
+    bit<8>  max_hop_cnt;
+    bit<8>  total_hop_cnt;
+    bit<4>  instruction_mask_0003;
+    bit<4>  instruction_mask_0407;
+    bit<4>  instruction_mask_0811;
+    bit<4>  instruction_mask_1215;
+    bit<16> rsvd2;
+}
+
+header intl4_shim_t {
+    bit<8> int_type;
+    bit<8> rsvd1;
+    bit<8> len_words;
+    bit<8> rsvd2;
+}
+
+header intl4_tail_t {
+    bit<8>  next_proto;
+    bit<16> dest_port;
+    bit<2>  padding;
+    bit<6>  dscp;
+}
+
 @controller_header("packet_in") header packet_in_header_t {
     port_num_t ingress_port;
     bit<7>     _pad;
@@ -469,7 +510,7 @@ control UpdateLogic(inout parsed_headers_t hdr, inout flowblaze_t flowblaze_meta
 }
 
 control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, inout standard_metadata_t standard_metadata) {
-    action define_operation_update_state(bit<16> state, bit<8> operation_0, bit<8> result_0, bit<8> op1_0, bit<8> op2_0, bit<32> operand1_0, bit<32> operand2_0, bit<8> operation_1, bit<8> result_1, bit<8> op1_1, bit<8> op2_1, bit<32> operand1_1, bit<32> operand2_1, bit<8> operation_2, bit<8> result_2, bit<8> op1_2, bit<8> op2_2, bit<32> operand1_2, bit<32> operand2_2, bit<8> pkt_action) {
+    @name(".FlowBlaze.define_operation_update_state") action define_operation_update_state(bit<16> state, bit<8> operation_0, bit<8> result_0, bit<8> op1_0, bit<8> op2_0, bit<32> operand1_0, bit<32> operand2_0, bit<8> operation_1, bit<8> result_1, bit<8> op1_1, bit<8> op2_1, bit<32> operand1_1, bit<32> operand2_1, bit<8> operation_2, bit<8> result_2, bit<8> op1_2, bit<8> op2_2, bit<32> operand1_2, bit<32> operand2_2, bit<8> pkt_action) {
         meta.flowblaze_metadata.state = state;
         meta.flowblaze_metadata.pkt_action = pkt_action;
         meta.flowblaze_metadata.update_block.u_block_0.operation = operation_0;
@@ -491,24 +532,24 @@ control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, 
         meta.flowblaze_metadata.update_block.u_block_2.operand1 = operand1_2;
         meta.flowblaze_metadata.update_block.u_block_2.operand2 = operand2_2;
     }
-    direct_counter(CounterType.packets_and_bytes) EFSM_table_counter;
-    table EFSM_table {
+    @name(".FlowBlaze.EFSM_table_counter") direct_counter(CounterType.packets_and_bytes) EFSM_table_counter;
+    @name(".FlowBlaze.EFSM_table") table EFSM_table {
         actions = {
             define_operation_update_state;
             NoAction;
         }
         key = {
-            meta.flowblaze_metadata.state: ternary;
-            meta.flowblaze_metadata.c0   : ternary;
-            meta.flowblaze_metadata.c1   : ternary;
-            meta.flowblaze_metadata.c2   : ternary;
-            meta.flowblaze_metadata.c3   : ternary;
+            meta.flowblaze_metadata.state: ternary @name("FlowBlaze.state") ;
+            meta.flowblaze_metadata.c0   : ternary @name("FlowBlaze.condition0") ;
+            meta.flowblaze_metadata.c1   : ternary @name("FlowBlaze.condition1") ;
+            meta.flowblaze_metadata.c2   : ternary @name("FlowBlaze.condition2") ;
+            meta.flowblaze_metadata.c3   : ternary @name("FlowBlaze.condition3") ;
             hdr.ipv4.src_addr            : ternary;
         }
         default_action = NoAction;
         counters = EFSM_table_counter;
     }
-    action lookup_context_table() {
+    @name(".FlowBlaze.lookup_context_table") action lookup_context_table() {
         hash(meta.flowblaze_metadata.lookup_state_index, HashAlgorithm.crc32, (bit<32>)0, { hdr.ipv4.src_addr }, (bit<32>)2014);
         reg_state.read(meta.flowblaze_metadata.state, meta.flowblaze_metadata.lookup_state_index);
         reg_R0.read(meta.flowblaze_metadata.R0, meta.flowblaze_metadata.lookup_state_index);
@@ -520,8 +561,8 @@ control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, 
         reg_G.read(meta.flowblaze_metadata.G2, 2);
         reg_G.read(meta.flowblaze_metadata.G3, 3);
     }
-    direct_counter(CounterType.packets_and_bytes) context_lookup_counter;
-    table context_lookup {
+    @name(".FlowBlaze.context_lookup_counter") direct_counter(CounterType.packets_and_bytes) context_lookup_counter;
+    @name(".FlowBlaze.context_lookup") table context_lookup {
         actions = {
             lookup_context_table;
             NoAction;
@@ -529,7 +570,7 @@ control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, 
         default_action = lookup_context_table();
         counters = context_lookup_counter;
     }
-    action set_condition_fields(bit<3> cond0, bit<8> op1_0, bit<8> op2_0, bit<32> operand1_0, bit<32> operand2_0, bit<3> cond1, bit<8> op1_1, bit<8> op2_1, bit<32> operand1_1, bit<32> operand2_1, bit<3> cond2, bit<8> op1_2, bit<8> op2_2, bit<32> operand1_2, bit<32> operand2_2, bit<3> cond3, bit<8> op1_3, bit<8> op2_3, bit<32> operand1_3, bit<32> operand2_3) {
+    @name(".FlowBlaze.set_condition_fields") action set_condition_fields(bit<3> cond0, bit<8> op1_0, bit<8> op2_0, bit<32> operand1_0, bit<32> operand2_0, bit<3> cond1, bit<8> op1_1, bit<8> op2_1, bit<32> operand1_1, bit<32> operand2_1, bit<3> cond2, bit<8> op1_2, bit<8> op2_2, bit<32> operand1_2, bit<32> operand2_2, bit<3> cond3, bit<8> op1_3, bit<8> op2_3, bit<32> operand1_3, bit<32> operand2_3) {
         meta.flowblaze_metadata.condition_block.c_block_0.cond = cond0;
         meta.flowblaze_metadata.condition_block.c_block_0.op1 = op1_0;
         meta.flowblaze_metadata.condition_block.c_block_0.op2 = op2_0;
@@ -551,8 +592,8 @@ control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, 
         meta.flowblaze_metadata.condition_block.c_block_3.operand1 = operand1_3;
         meta.flowblaze_metadata.condition_block.c_block_3.operand2 = operand2_3;
     }
-    direct_counter(CounterType.packets_and_bytes) condition_table_counter;
-    table condition_table {
+    @name(".FlowBlaze.condition_table_counter") direct_counter(CounterType.packets_and_bytes) condition_table_counter;
+    @name(".FlowBlaze.condition_table") table condition_table {
         actions = {
             set_condition_fields;
             NoAction;
@@ -560,16 +601,16 @@ control FlowBlazeLoop(inout parsed_headers_t hdr, inout fabric_metadata_t meta, 
         default_action = NoAction;
         counters = condition_table_counter;
     }
-    action forward() {
+    @name(".FlowBlaze.forward") action forward() {
     }
-    action drop() {
+    @name(".FlowBlaze.drop") action drop() {
         mark_to_drop(standard_metadata);
         exit;
     }
-    direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
-    table pkt_action {
+    @name(".FlowBlaze.pkt_action_counter") direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
+    @name(".FlowBlaze.pkt_action") table pkt_action {
         key = {
-            meta.flowblaze_metadata.pkt_action: ternary;
+            meta.flowblaze_metadata.pkt_action: ternary @name("FlowBlaze.pkt_action") ;
         }
         actions = {
             forward;

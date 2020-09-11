@@ -18,14 +18,14 @@
 #include <v1model.p4>
 
 
-
-
 #define FLOW_SCOPE { hdr.ipv4.src_addr }
 #define METADATA_OPERATION_COND (bit<32>) hdr.ipv4.total_len
 #define EFSM_MATCH_FIELDS  hdr.ipv4.src_addr: ternary;
-#define CUSTOM_ACTIONS_DEFINITION action forward() { \
+#define CUSTOM_ACTIONS_DEFINITION @name(".FlowBlaze.forward")\
+                                    action forward() { \
                                     \
                                   } \
+                                  @name(".FlowBlaze.drop")\
                                   action drop() { \
                                     mark_to_drop(standard_metadata); \
                                     exit; \
@@ -34,6 +34,9 @@
 // Configuration parameter left black because not needed
 //
 //    #define CONTEXT_TABLE_SIZE
+#define FABRIC
+#define METADATA_NAME fabric_metadata_t
+#define HEADER_NAME parsed_headers_t
 ####################################################################################################################
 
 #include "flowblaze_lib/flowblaze_metadata.p4"
@@ -53,6 +56,18 @@
 #include "include/control/port_counter.p4"
 #endif // WITH_PORT_COUNTER
 
+#ifdef WITH_SPGW
+#include "include/control/spgw.p4"
+#endif // WITH_SPGW
+
+#ifdef WITH_BNG
+#include "include/bng.p4"
+#endif // WITH_BNG
+
+#ifdef WITH_INT
+#include "include/int/int_main.p4"
+#endif // WITH_INT
+
 control FabricIngress (inout parsed_headers_t hdr,
                        inout fabric_metadata_t fabric_metadata,
                        inout standard_metadata_t standard_metadata) {
@@ -65,10 +80,16 @@ control FabricIngress (inout parsed_headers_t hdr,
 #ifdef WITH_PORT_COUNTER
     PortCountersControl() port_counters_control;
 #endif // WITH_PORT_COUNTER
+#ifdef WITH_SPGW
+    SpgwIngress() spgw_ingress;
+#endif // WITH_SPGW
 
     apply {
         _PRE_INGRESS
         pkt_io_ingress.apply(hdr, fabric_metadata, standard_metadata);
+#ifdef WITH_SPGW
+        spgw_ingress.apply(hdr, fabric_metadata, standard_metadata);
+#endif // WITH_SPGW
         filtering.apply(hdr, fabric_metadata, standard_metadata);
         if (fabric_metadata.skip_forwarding == _FALSE) {
             forwarding.apply(hdr, fabric_metadata, standard_metadata);
@@ -81,12 +102,17 @@ control FabricIngress (inout parsed_headers_t hdr,
             // multicast groups. Remove when gNMI support will be there.
             port_counters_control.apply(hdr, fabric_metadata, standard_metadata);
 #endif // WITH_PORT_COUNTER
+#if defined(WITH_INT_SOURCE) || defined(WITH_INT_SINK)
+            process_set_source_sink.apply(hdr, fabric_metadata, standard_metadata);
+#endif
         }
-        // Last apply FlowBlaze Loop.
+#ifdef WITH_BNG
+        bng_ingress.apply(hdr, fabric_metadata, standard_metadata);
+#endif // WITH_BNG
 
+        // Last apply FlowBlaze Loop.
         // TODO: should we apply the FlowBlazeLoop before?
         FlowBlazeLoop.apply(hdr, fabric_metadata, standard_metadata);
-
     }
 }
 
@@ -96,10 +122,23 @@ control FabricEgress (inout parsed_headers_t hdr,
 
     PacketIoEgress() pkt_io_egress;
     EgressNextControl() egress_next;
+#ifdef WITH_SPGW
+    SpgwEgress() spgw_egress;
+#endif // WITH_SPGW
+
     apply {
         _PRE_EGRESS
         pkt_io_egress.apply(hdr, fabric_metadata, standard_metadata);
         egress_next.apply(hdr, fabric_metadata, standard_metadata);
+#ifdef WITH_SPGW
+        spgw_egress.apply(hdr, fabric_metadata);
+#endif // WITH_SPGW
+#ifdef WITH_BNG
+        bng_egress.apply(hdr, fabric_metadata, standard_metadata);
+#endif // WITH_BNG
+#ifdef WITH_INT
+        process_int_main.apply(hdr, fabric_metadata, standard_metadata);
+#endif
     }
 }
 

@@ -30,6 +30,7 @@ import static org.onosproject.net.pi.model.PiPipeconf.ExtensionType.BMV2_JSON;
 @Component(immediate = true, service = PipeconfLoader.class)
 public final class PipeconfLoader {
 
+    public static final String FABRIC_FLOWBLAZE_PROFILE = "fabric-flowblaze";
     private final Logger log = LoggerFactory.getLogger(getClass());
     private static final String BASE_PATH = "/p4c-out/fabric-flowblaze/bmv2/default/";
     private static final String P4INFO = "p4info.txt";
@@ -76,12 +77,11 @@ public final class PipeconfLoader {
 
         DefaultPiPipeconf.Builder builder = DefaultPiPipeconf.builder()
                 .withId(PIPECONF_ID)
-                // TODO: is there a more elegant way?
                 .addBehaviour(PortStatisticsDiscovery.class, PortStatisticsDiscoveryImpl.class)
                 .addExtension(BMV2_JSON, bmv2JsonUrlUrl);
 
         // Use the standard Fabric Pipeliner
-        return fabricPipeconfService.buildFabricPipeconf(builder, "fabric-flowblaze", p4InfoUrl, cpuPortUrl);
+        return fabricPipeconfService.buildFabricPipeconf(builder, FABRIC_FLOWBLAZE_PROFILE, p4InfoUrl, cpuPortUrl);
     }
 
     private void removePipeconfDrivers() {

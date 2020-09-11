@@ -71,12 +71,27 @@ control Next (inout parsed_headers_t hdr,
         next_vlan_counter.count();
     }
 
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
+    action set_double_vlan(vlan_id_t outer_vlan_id, vlan_id_t inner_vlan_id) {
+        set_vlan(outer_vlan_id);
+        fabric_metadata.push_double_vlan = _TRUE;
+        fabric_metadata.inner_vlan_id = inner_vlan_id;
+#ifdef WITH_BNG
+        fabric_metadata.bng.s_tag = outer_vlan_id;
+        fabric_metadata.bng.c_tag = inner_vlan_id;
+#endif // WITH_BNG
+    }
+#endif // WITH_DOUBLE_VLAN_TERMINATION
+
     table next_vlan {
         key = {
             fabric_metadata.next_id: exact @name("next_id");
         }
         actions = {
             set_vlan;
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
+            set_double_vlan;
+#endif // WITH_DOUBLE_VLAN_TERMINATION
             @defaultonly nop;
         }
         const default_action = nop();
@@ -278,6 +293,19 @@ control EgressNextControl (inout parsed_headers_t hdr,
         hdr.vlan_tag.vlan_id = fabric_metadata.vlan_id;
     }
 
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
+    @hidden
+    action push_inner_vlan() {
+        // Push inner VLAN TAG, rewriting correclty the outer vlan eth_type
+        hdr.inner_vlan_tag.setValid();
+        hdr.inner_vlan_tag.cfi = fabric_metadata.inner_vlan_cfi;
+        hdr.inner_vlan_tag.pri = fabric_metadata.inner_vlan_pri;
+        hdr.inner_vlan_tag.vlan_id = fabric_metadata.inner_vlan_id;
+        hdr.inner_vlan_tag.eth_type = ETHERTYPE_VLAN;
+        hdr.vlan_tag.eth_type = ETHERTYPE_VLAN;
+    }
+#endif // WITH_DOUBLE_VLAN_TERMINATION
+
     /*
      * Egress VLAN Table.
      * Pops the VLAN tag if the pair egress port and VLAN ID is matched.
@@ -314,14 +342,27 @@ control EgressNextControl (inout parsed_headers_t hdr,
         } else {
             set_mpls();
         }
-        // Port-based VLAN tagging (by default all
-        // ports are assumed tagged)
-        if (!egress_vlan.apply().hit) {
-            // Push VLAN tag if not the default one.
-            if (fabric_metadata.vlan_id != DEFAULT_VLAN_ID) {
-                push_vlan();
+
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
+        if (fabric_metadata.push_double_vlan == _TRUE) {
+            // Double VLAN termination.
+            push_vlan();
+            push_inner_vlan();
+        } else {
+            // If no push double vlan, inner_vlan_tag must be popped
+            hdr.inner_vlan_tag.setInvalid();
+#endif // WITH_DOUBLE_VLAN_TERMINATION
+            // Port-based VLAN tagging (by default all
+            // ports are assumed tagged)
+            if (!egress_vlan.apply().hit) {
+                // Push VLAN tag if not the default one.
+                if (fabric_metadata.vlan_id != DEFAULT_VLAN_ID) {
+                    push_vlan();
+                }
             }
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
         }
+#endif // WITH_DOUBLE_VLAN_TERMINATION
 
         // TTL decrement and check.
         if (hdr.mpls.isValid()) {

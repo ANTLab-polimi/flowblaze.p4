@@ -2,6 +2,7 @@ package org.polimi.flowblaze;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import org.apache.commons.lang3.tuple.Pair;
@@ -70,5 +71,17 @@ public class EfsmMatch {
                 .replaceAll("0x", "").toUpperCase();
         return Pair.of(BaseEncoding.base16().decode(value),
                        BaseEncoding.base16().decode(mask));
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("state", state)
+                .add("condition0", condition0)
+                .add("condition1", condition1)
+                .add("condition2", condition2)
+                .add("condition3", condition3)
+                .add("efsmExtraMatchFields", efsmExtraMatchFields)
+                .toString();
     }
 }

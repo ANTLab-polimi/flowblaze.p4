@@ -6,9 +6,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
 import org.onosproject.net.DeviceId;
-import org.onosproject.net.device.DeviceEvent;
-import org.onosproject.net.device.DeviceListener;
-import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.FlowEntry;
 import org.onosproject.net.flow.FlowRule;
 import org.onosproject.net.flow.FlowRuleService;
@@ -42,13 +39,9 @@ import static org.polimi.flowblaze.FlowblazeConst.*;
 @Component(immediate = true, service = {FlowblazeService.class})
 public class FlowblazeManager implements FlowblazeService {
 
-
     public static final String FLOWBLAZE_APP = "org.polimi.flowblaze";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    @Reference(cardinality = ReferenceCardinality.MANDATORY)
-    protected DeviceService deviceService;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected CoreService coreService;
@@ -59,38 +52,32 @@ public class FlowblazeManager implements FlowblazeService {
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected PiPipeconfService piPipeconfService;
 
-    private InternalDeviceListener deviceListener;
     private DeviceId flowblazeDeviceId = null;
     private ApplicationId appId;
 
     @Activate
     protected void activate() {
         appId = coreService.registerApplication(FLOWBLAZE_APP);
-        deviceListener = new InternalDeviceListener();
-
-        deviceService.addListener(deviceListener);
-
         log.info("FlowBlaze app activated");
     }
 
     @Deactivate
     protected void deactivate() {
-        deviceService.removeListener(deviceListener);
         flowRuleService.removeFlowRulesById(appId);
         log.info("FlowBlaze app deactivated");
     }
 
     @Override
     public boolean setupConditions(List<EfsmCondition> conditions) {
+        if (!checkFlowBlazeDevice()) {
+            return false;
+        }
         // N.B: conditions are ordered!!! Must be filled in order!
         log.info("Adding Conditions on {}...", flowblazeDeviceId);
+        log.debug("Conditions: {}", conditions);
         if (conditions.size() != MAX_CONDITIONS) {
             log.error(String.format("Wrong number of conditions! (Provided: %d, Required: %d)",
                                     conditions.size(), MAX_CONDITIONS));
-            return false;
-        }
-        if (flowblazeDeviceId == null) {
-            log.error("First set the FlowBlaze Device ID");
             return false;
         }
         List<PiActionParam> conditionParams = Lists.newArrayList();
@@ -113,7 +100,6 @@ public class FlowblazeManager implements FlowblazeService {
                     c.constOperand2));
             i++;
         }
-        log.info(conditionParams.toString());
 
         PiTableAction action = PiAction.builder()
                 .withId(ACTION_SET_CONDITION_FIELDS)
@@ -131,27 +117,22 @@ public class FlowblazeManager implements FlowblazeService {
     public boolean setupEfsmTable(EfsmMatch match, int nextState, List<EfsmOperation> operations, byte pktAction) {
         // TODO: should we check if the pkt_action is actually available?
         //  This would mean that first we have to push pkt_actions and then setup the EFSM Table.
-
-        log.info("Adding EFSM Table entry on {}...", flowblazeDeviceId);
-        if (flowblazeDeviceId == null) {
-            log.error("First set the FlowBlaze Device ID");
+        if (!checkFlowBlazeDevice()) {
             return false;
         }
+        log.info("Adding EFSM Table entry on {}...", flowblazeDeviceId);
+        log.debug("Match: {}, Next State: {}, Operations: {}, Packet Action: {}",
+                  match, nextState, operations, pktAction);
         if (operations.size() != MAX_OPERATIONS) {
             log.error(String.format("Missing operations! (Provided: %d, Required: %d)",
                                     operations.size(), MAX_OPERATIONS));
             return false;
         }
-        if (piPipeconfService.getPipeconf(flowblazeDeviceId).isPresent()) {
-            // TODO: not sure this check if necessary, the translator would fail
-            //  anyway and not exception would be generated. Maybe we can issue a simple warning?
-            if (!match.checkEfsmExtraMatchFields(piPipeconfService.getPipeconf(flowblazeDeviceId).get())) {
-                log.error("EFSM Extra Match Fields not available!, use a device with a different pipeconf");
-                return false;
-            }
-        } else {
-            // TODO: should we continue???
-            log.info("No pipeconf present! Not able to check EFSM Extra Match Fields");
+        // TODO: not sure this check if necessary, the translator would fail
+        //  anyway and no exception would be generated. Maybe we can issue a simple warning?
+        // Check that the EFSM Extra match field is present in the actual pipeline.
+        if (!match.checkEfsmExtraMatchFields(piPipeconfService.getPipeconf(flowblazeDeviceId).get())) {
+            log.error("EFSM Extra Match Fields not available!, use a device with a different pipeconf");
             return false;
         }
 
@@ -202,11 +183,8 @@ public class FlowblazeManager implements FlowblazeService {
         if (match.condition3 != null) {
             criterionBuilder.matchTernary(FIELD_EFSM_TABLE_C3, match.condition3 ? ONE : ZERO, ONE);
         }
-
+        // Build the EFSM Extra match field
         for (Map.Entry<String, Pair<byte[], byte[]>> field : match.efsmExtraMatchFields.entrySet()) {
-            //byte[] matchMask = new byte[field.getValue().length];
-            //Arrays.fill(matchMask, (byte) 0xFF);
-            // TODO: the PiMatchFieldId.of(field.getKey()) can generate an exception?
             criterionBuilder.matchTernary(PiMatchFieldId.of(field.getKey()),
                                           field.getValue().getLeft(),
                                           field.getValue().getRight());
@@ -223,10 +201,11 @@ public class FlowblazeManager implements FlowblazeService {
 
     @Override
     public boolean setupPktAction(byte pktAction, String actionName) {
-        if (flowblazeDeviceId == null) {
-            log.error("First set the FlowBlaze Device ID");
+        if (!checkFlowBlazeDevice()) {
             return false;
         }
+        log.info("Adding packet action entry on {}...", flowblazeDeviceId);
+        log.debug("Packet action ID: {}, Packet action name: {}", pktAction, actionName);
         PiCriterion criteria = PiCriterion.builder()
                 .matchTernary(FIELD_PKT_ACTION_PKT_ACTION, pktAction, 0xFF)
                 .build();
@@ -244,12 +223,13 @@ public class FlowblazeManager implements FlowblazeService {
     }
 
     @Override
-    public void setFlowblazeDeviceId(DeviceId deviceId) {
+    public boolean setFlowblazeDeviceId(DeviceId deviceId) {
         if (flowblazeDeviceId != null) {
-            log.error("You can modify the FlowBlaze Device ID if already set");
-            return;
+            log.error("You cannot modify the FlowBlaze Device ID if it is already set");
+            return false;
         }
         flowblazeDeviceId = deviceId;
+        return true;
     }
 
     @Override
@@ -277,6 +257,11 @@ public class FlowblazeManager implements FlowblazeService {
         return resetFlowRules(TABLE_EFSM_TABLE);
     }
 
+    @Override
+    public DeviceId getFlowBlazeDeviceId() {
+        return flowblazeDeviceId;
+    }
+
     private boolean resetFlowRules(TableId tableId) {
         if (flowblazeDeviceId == null) {
             log.error("Device ID not set!");
@@ -293,41 +278,19 @@ public class FlowblazeManager implements FlowblazeService {
         return true;
     }
 
-
-    @Override
-    public DeviceId getFlowBlazeDeviceId() {
-        return flowblazeDeviceId;
-    }
-
     /**
-     * React to devices.
+     * @return True if the FlowBlaze device is not null and the pipeconf is present, False otherwise.
      */
-    private class InternalDeviceListener implements DeviceListener {
-        @Override
-        public void event(DeviceEvent event) {
-            DeviceId deviceId = event.subject().id();
-            if (deviceId.equals(flowblazeDeviceId)) {
-                switch (event.type()) {
-                    case DEVICE_ADDED:
-                    case DEVICE_UPDATED:
-                    case DEVICE_AVAILABILITY_CHANGED:
-                        if (deviceService.isAvailable(deviceId)) {
-                            log.debug("Event: {}, FlowBlaze device available", event.type());
-                        }
-                        break;
-                    case DEVICE_REMOVED:
-                    case DEVICE_SUSPENDED:
-                        log.debug("Event: {}, FlowBlaze device not available", event.type());
-                        break;
-                    case PORT_ADDED:
-                    case PORT_UPDATED:
-                    case PORT_REMOVED:
-                    case PORT_STATS_UPDATED:
-                        break;
-                    default:
-                        log.warn("Unknown device event type {}", event.type());
-                }
-            }
+    private boolean checkFlowBlazeDevice() {
+        if (flowblazeDeviceId == null) {
+            log.error("First set the FlowBlaze Device ID");
+            return false;
         }
+        if (!piPipeconfService.getPipeconf(flowblazeDeviceId).isPresent()) {
+            log.info("No pipeconf present for {} device", flowblazeDeviceId);
+            return false;
+        }
+        return true;
     }
+
 }

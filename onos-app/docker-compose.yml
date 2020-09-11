@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  mininet:
+    image: dmoro92/p4mn:latest
+    volumes:
+      - ./:/mn_onos
+      - ./topo:/topo
+    privileged: true
+    ports:
+      - "50001:50001"
+      - "50002:50002"
+      - "50003:50003"
+      - "50004:50004"
+    entrypoint: "/mn_onos/topo.py"
+    tty: true
+  onos:
+    image: onosproject/onos:2.2.3
+    ports:
+      - "8181:8181"
+      - "8101:8101"
+    environment:
+      - ONOS_APPS=drivers,gui,openflow,segmentrouting,drivers.stratum,pipelines.fabric,drivers.bmv2
+    links:
+      - mininet

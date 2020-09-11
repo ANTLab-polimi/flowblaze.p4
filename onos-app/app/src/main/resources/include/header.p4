@@ -18,6 +18,7 @@
 #define __HEADER__
 
 #include "define.p4"
+#include "int/int_header.p4"
 
 @controller_header("packet_in")
 header packet_in_header_t {
@@ -123,12 +124,68 @@ header icmp_t {
     bit<64> timestamp;
 }
 
+#ifdef WITH_SPGW
+// GTPU v1
+header gtpu_t {
+    bit<3>  version;    /* version */
+    bit<1>  pt;         /* protocol type */
+    bit<1>  spare;      /* reserved */
+    bit<1>  ex_flag;    /* next extension hdr present? */
+    bit<1>  seq_flag;   /* sequence no. */
+    bit<1>  npdu_flag;  /* n-pdn number present ? */
+    bit<8>  msgtype;    /* message type */
+    bit<16> msglen;     /* message length */
+    teid_t  teid;       /* tunnel endpoint id */
+}
+
+struct spgw_meta_t {
+    direction_t       direction;
+    bit<16>           ipv4_len;
+    teid_t            teid;
+    bit<16>           tunnel_src_port;
+    bit<32>           tunnel_src_addr;
+    bit<32>           tunnel_dst_addr;
+    pdr_ctr_id_t      ctr_id;
+    far_id_t          far_id;
+    spgw_interface_t  src_iface;
+    _BOOL             skip_spgw;
+    _BOOL             pdr_hit;
+    _BOOL             far_dropped;
+    _BOOL             notify_spgwc;
+    _BOOL             needs_gtpu_encap;
+    _BOOL             needs_gtpu_decap;
+}
+#endif // WITH_SPGW
+
+#ifdef WITH_BNG
+
+typedef bit<2> bng_type_t;
+const bng_type_t BNG_TYPE_INVALID = 2w0x0;
+const bng_type_t BNG_TYPE_UPSTREAM = 2w0x1;
+const bng_type_t BNG_TYPE_DOWNSTREAM = 2w0x2;;
+
+struct bng_meta_t {
+    bit<2>    type; // upstream or downstream
+    bit<32>   line_id; // subscriber line
+    bit<16>   pppoe_session_id;
+    bit<32>   ds_meter_result; // for downstream metering
+    vlan_id_t s_tag;
+    vlan_id_t c_tag;
+}
+#endif // WITH_BNG
+
 //Custom metadata definition
 struct fabric_metadata_t {
     bit<16>       ip_eth_type;
     vlan_id_t     vlan_id;
     bit<3>        vlan_pri;
     bit<1>        vlan_cfi;
+#ifdef WITH_DOUBLE_VLAN_TERMINATION
+    _BOOL         push_double_vlan;
+    vlan_id_t     inner_vlan_id;
+    bit<3>        inner_vlan_pri;
+    bit<1>        inner_vlan_cfi;
+#endif // WITH_DOUBLE_VLAN_TERMINATION
     mpls_label_t  mpls_label;
     bit<8>        mpls_ttl;
     _BOOL         skip_forwarding;
@@ -142,19 +199,41 @@ struct fabric_metadata_t {
     bit<16>       l4_dport;
     bit<32>       ipv4_src_addr;
     bit<32>       ipv4_dst_addr;
-    bit<32>       ipv4_dst_addr;
-    // FLOWBLAZE Metadata
+#ifdef WITH_SPGW
+    bit<16>       inner_l4_sport;
+    bit<16>       inner_l4_dport;
+    spgw_meta_t   spgw;
+#endif // WITH_SPGW
+#ifdef WITH_BNG
+    bng_meta_t    bng;
+#endif // WITH_BNG
+#ifdef WITH_INT
+    int_metadata_t int_meta;
+#endif // WITH_INT
     flowblaze_t   flowblaze_metadata;
 }
 
 struct parsed_headers_t {
     ethernet_t ethernet;
     vlan_tag_t vlan_tag;
-#if defined(WITH_XCONNECT)
+#if defined(WITH_XCONNECT) || defined(WITH_DOUBLE_VLAN_TERMINATION)
     vlan_tag_t inner_vlan_tag;
-#endif // WITH_XCONNECT
+#endif // WITH_XCONNECT || WITH_DOUBLE_VLAN_TERMINATION
     eth_type_t eth_type;
+#ifdef WITH_BNG
+    pppoe_t pppoe;
+#endif // WITH_BNG
     mpls_t mpls;
+#ifdef WITH_SPGW
+    ipv4_t gtpu_ipv4;
+    udp_t gtpu_udp;
+    gtpu_t outer_gtpu;
+    gtpu_t gtpu;
+    ipv4_t inner_ipv4;
+    udp_t inner_udp;
+    tcp_t inner_tcp;
+    icmp_t inner_icmp;
+#endif // WITH_SPGW
     ipv4_t ipv4;
 #ifdef WITH_IPV6
     ipv6_t ipv6;
@@ -164,6 +243,33 @@ struct parsed_headers_t {
     icmp_t icmp;
     packet_out_header_t packet_out;
     packet_in_header_t packet_in;
+#ifdef WITH_INT_SINK
+    // INT Report encap
+    ethernet_t report_ethernet;
+    eth_type_t report_eth_type;
+    ipv4_t report_ipv4;
+    udp_t report_udp;
+    // INT Report header (support only fixed)
+    report_fixed_header_t report_fixed_header;
+    // local_report_t report_local;
+#endif // WITH_INT_SINK
+#ifdef WITH_INT
+    // INT specific headers
+    intl4_shim_t intl4_shim;
+    int_header_t int_header;
+    int_switch_id_t int_switch_id;
+    int_port_ids_t int_port_ids;
+    int_hop_latency_t int_hop_latency;
+    int_q_occupancy_t int_q_occupancy;
+    int_ingress_tstamp_t int_ingress_tstamp;
+    int_egress_tstamp_t int_egress_tstamp;
+    int_q_congestion_t int_q_congestion;
+    int_egress_port_tx_util_t int_egress_tx_util;
+#ifdef WITH_INT_SINK
+    int_data_t int_data;
+#endif // WITH_INT_SINK
+    intl4_tail_t intl4_tail;
+#endif //WITH_INT
 }
 
 #endif

@@ -1,11 +1,11 @@
 {
   "pktActions" : [
     {
-      "action": "FabricIngress.FlowBlazeLoop.forward",
+      "action": "FlowBlaze.forward",
       "id": 1
     },
     {
-      "action": "FabricIngress.FlowBlazeLoop.drop",
+      "action": "FlowBlaze.drop",
       "id": 2
     }
   ]

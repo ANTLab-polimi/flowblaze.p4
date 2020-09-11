@@ -2,6 +2,10 @@ package org.polimi.flowblaze;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
+
+import static org.polimi.flowblaze.FlowblazeConst.*;
+import static org.polimi.flowblaze.Utils.stringToByte;
 
 /**
  * Representation of an EFSM Condition.
@@ -19,52 +23,13 @@ public class EfsmCondition {
                          @JsonProperty("operand2") String op2,
                          @JsonProperty("constOperand1") int constOp1,
                          @JsonProperty("constOperand2") int constOp2) {
-        switch (op1) {
-            case "CONST":
-                this.operand1 = FlowblazeConst.EXPLICIT_OPERAND;
-                this.constOperand1 = constOp1;
-                break;
-            case "META":
-                this.operand1 = FlowblazeConst.REGISTER_META;
-                this.constOperand1 = 0;
-                break;
-            case "NOW":
-                this.operand1 = FlowblazeConst.REGISTER_NOW;
-                this.constOperand1 = 0;
-                break;
-            default:
-                this.operand1 = stringToByte(op1);
-                this.constOperand1 = 0;
-                break;
-        }
-        switch (op2) {
-            case "CONST":
-                this.operand2 = FlowblazeConst.EXPLICIT_OPERAND;
-                this.constOperand2 = constOp2;
-                break;
-            case "META":
-                this.operand2 = FlowblazeConst.REGISTER_META;
-                this.constOperand2 = 0;
-                break;
-            case "NOW":
-                this.operand2 = FlowblazeConst.REGISTER_NOW;
-                this.constOperand2 = 0;
-                break;
-            default:
-                this.operand2 = stringToByte(op2);
-                this.constOperand2 = 0;
-                break;
-        }
-        this.operation = op;
-    }
+        this.operand1 = REGISTERS.getOrDefault(op1, stringToByte(op1));
+        this.constOperand1 = op1.equals(STRING_CONST_REGISTER) ? constOp1 : 0;
 
-    private byte stringToByte(String value) {
-        if (value.contains("0x")) {
-            // Remove 0x from the string
-            value = value.replaceAll("0x", "");
-            return (byte) (Integer.parseInt(value, 16) & 0xff);
-        }
-        return (byte) (Integer.parseInt(value) & 0xff);
+        this.operand2 = REGISTERS.getOrDefault(op2, stringToByte(op2));
+        this.constOperand2 = op2.equals(STRING_CONST_REGISTER) ? constOp2 : 0;
+
+        this.operation = op;
     }
 
     public static EfsmCondition defaultEfsmCondition() {
@@ -96,5 +61,16 @@ public class EfsmCondition {
                     return FlowblazeConst.CONDITION_NOP;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("operand1", REVERSE_REGISTERS.getOrDefault(operand1, Byte.toString(operand1)))
+                .add("operand2", REVERSE_REGISTERS.getOrDefault(operand2, Byte.toString(operand2)))
+                .add("constOperand1", constOperand1)
+                .add("constOperand2", constOperand2)
+                .add("operation", operation)
+                .toString();
     }
 }
