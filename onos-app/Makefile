@@ -15,42 +15,43 @@ push-app: $(APP_OAR)
 	onos-app localhost reinstall! ${APP_OAR}
 
 push-netcfg:
-	onos-netcfg localhost netcfg.json
+	onos-netcfg localhost topo/netcfg.json
 
-start-onos:
-	$(info *** Running ONOS ***)
-	docker run -t --rm -d -p 8181:8181 -p 8101:8101 -p 5005:5005 -p 830:830 --name onos -e ONOS_APPS=drivers,gui,openflow,segmentrouting,drivers.stratum,pipelines.fabric,drivers.bmv2 onosproject/onos:2.2.3
+start:
+	docker-compose up -d
 
-stop-onos:
-	docker stop -t0 onos
+stop:
+	docker-compose down
+
+onos-log:
+	docker-compose logs -f onos
+
+mn-log:
+	docker-compose logs -f mininet
 
 onos-cli:
 	ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -p 8101 onos@localhost
 
-start-mininet:
-	$(info *** Running topo.py Mininet topology)
-	docker run --privileged -it -d --rm --name mininet_onos \
-    	-v ${curr_dir}:/mn_onos \
-    	--entrypoint /mn_onos/topo.py \
-    	dmoro92/p4mn:latest
-
-stop-mininet:
-	docker stop -t0 mininet_onos | true
-
 leaf1_shell:
 	docker exec -it mininet_onos /bin/sh -c 'simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port)'
-attach-mininet:
-	$(info ******* To detach CTRL+P followed by CTRL+Q *******)
-	@docker attach mininet_onos
 
-test-h1:
-	@docker exec -it mininet_onos /bin/sh -c '/mn_onos/utils/h1-iperf-test_udp.sh'
+mn-cli:
+	$(info ******* Ctrl+A Ctrl+D to detach *******)
+	docker-compose exec mininet screen -Urx -S cli
 
-test-h2:
-	@docker exec -it mininet_onos /bin/sh -c '/mn_onos/utils/h2-iperf-test_udp.sh'
+h1-cli:
+	docker-compose exec mininet /mininet/util/m h1
+
+h2-cli:
+	docker-compose exec mininet /mininet/util/m h1
+
+h1-test:
+	@docker-compose exec mininet /bin/sh -c '/mn_onos/utils/h1-iperf-test_udp.sh'
+
+h2-test:
+	@docker-compose exec mininet /bin/sh -c '/mn_onos/utils/h2-iperf-test_udp.sh'
 
 p4runtime_shell:
-	docker run -ti p4lang/p4runtime-sh \
-      --grpc-addr 172.17.0.2:50001 \
+	docker run -ti --rm p4lang/p4runtime-sh \
+      --grpc-addr 172.28.0.2:50001 \
       --device-id 1 --election-id 0,1
-
