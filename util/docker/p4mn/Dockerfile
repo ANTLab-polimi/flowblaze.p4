@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
     arping \
     telnet \
     tcpdump \
-    sudo
+    sudo \
+    screen
 
 RUN add-apt-repository ppa:frederic-loui/p4lang-3rd-party && \
 	add-apt-repository ppa:frederic-loui/p4lang-master-bionic-nightly && \
