@@ -25,7 +25,7 @@
       "type": "Link",
       "nodeA": 0,
       "nodeB": 1,
-      "text": "hdr.ipv4.srcAddr == 10.0.1.0&&&0xFFFFFF00 |  | bytes = @meta ; max_bytes = 250000 ; t_lim = @now + 1000000 | forward()",
+      "text": "hdr.ipv4.srcAddr == 0x0a000100&&&0xFFFFFF00 |  | bytes = @meta ; max_bytes = 250000 ; t_lim = @now + 1000000 | forward()",
       "lineAngleAdjust": 3.141592653589793,
       "parallelPart": 0.5770474516695958,
       "perpendicularPart": -118.39788819781047
@@ -34,7 +34,7 @@
       "type": "Link",
       "nodeA": 0,
       "nodeB": 1,
-      "text": "hdr.ipv4.srcAddr == 10.0.0.0&&&0xFFFFFF00 |  | bytes = @meta ; t_lim = @now + 1000000 ; max_bytes = 125000 | forward()",
+      "text": "hdr.ipv4.srcAddr == 0x0a000000&&&0xFFFFFF00 |  | bytes = @meta ; t_lim = @now + 1000000 ; max_bytes = 125000 | forward()",
       "lineAngleAdjust": 3.141592653589793,
       "parallelPart": 0.46699002107104515,
       "perpendicularPart": -64.1732738176606

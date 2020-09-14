@@ -5,9 +5,11 @@
 ################################################## FLOWBLAZE PARAMETERS #############################################
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr }
-#define CUSTOM_ACTIONS_DEFINITION action forward() { \
+#define CUSTOM_ACTIONS_DEFINITION @name(".FlowBlaze.forward") \
+                                  action forward() { \
                                     \
                                   } \
+                                  @name(".FlowBlaze.drop") \
                                   action drop() { \
                                     mark_to_drop(standard_metadata); \
                                     exit; \

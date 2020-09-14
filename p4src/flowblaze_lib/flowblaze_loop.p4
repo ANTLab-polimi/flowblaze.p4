@@ -37,16 +37,6 @@
 #ifndef CONTEXT_TABLE_SIZE
     #define CONTEXT_TABLE_SIZE 2014
 #endif
-/*
-* TODO:
-*  - Timeouts are not implemented 
-*  - Lack of conditions of packet header (implementable).
-*  - BI-FLOW not implemented (it can be implemented adding a second
-*       lookup hash field and loading also the register of the corresponding second lookup. 
-*       This logic is valid also for the update.)
-*  - Check corner cases like condition not set and update not evaluated.
-*  - Some problems with multicast groups.
-*/
 
 // Global Data Variable: 4
 register<bit<32>>(4) reg_G;

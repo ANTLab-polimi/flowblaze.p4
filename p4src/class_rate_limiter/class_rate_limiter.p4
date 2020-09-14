@@ -7,9 +7,11 @@
 #define FLOW_SCOPE { hdr.ipv4.srcAddr }
 #define METADATA_OPERATION_COND (bit<32>) meta.l4Length
 #define EFSM_MATCH_FIELDS  hdr.ipv4.srcAddr: ternary;
-#define CUSTOM_ACTIONS_DEFINITION action forward() { \
+#define CUSTOM_ACTIONS_DEFINITION @name(".FlowBlaze.forward") \
+                                  action forward() { \
                                     \
                                   } \
+                                  @name(".FlowBlaze.drop") \
                                   action drop() { \
                                     mark_to_drop(standard_metadata); \
                                     exit; \
