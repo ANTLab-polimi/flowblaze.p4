@@ -36,7 +36,7 @@
         }
       },
       "basic": {
-        "managementAddress": "grpc://172.17.0.2:50001?device_id=1",
+        "managementAddress": "grpc://mininetff:50001?device_id=1",
         "driver": "bmv2",
         "pipeconf": "org.polimi.fabric-flowblaze"
       },
@@ -79,7 +79,7 @@
         }
       },
       "basic": {
-        "managementAddress": "grpc://172.17.0.2:50002?device_id=1",
+        "managementAddress": "grpc://mininetff:50002?device_id=1",
         "driver": "bmv2",
         "pipeconf": "org.onosproject.pipelines.fabric"
       },
@@ -114,7 +114,7 @@
         }
       },
       "basic": {
-        "managementAddress": "grpc://172.17.0.2:50003?device_id=1",
+        "managementAddress": "grpc://mininetff:50003?device_id=1",
         "driver": "bmv2",
         "pipeconf": "org.onosproject.pipelines.fabric"
       },
@@ -149,7 +149,7 @@
         }
       },
       "basic": {
-        "managementAddress": "grpc://172.17.0.2:50004?device_id=1",
+        "managementAddress": "grpc://mininetff:50004?device_id=1",
         "driver": "bmv2",
         "pipeconf": "org.onosproject.pipelines.fabric"
       },
@@ -173,7 +173,7 @@
           "ips": [
             "10.0.0.254/24"
           ],
-          "vlan-untagged": 11
+          "vlan-untagged": 10
         }
       ]
     },
@@ -182,7 +182,7 @@
         {
           "name": "h2",
           "ips": [
-            "10.0.0.254/24"
+            "10.0.1.254/24"
           ],
           "vlan-untagged": 11
         }
@@ -195,7 +195,7 @@
           "ips": [
             "10.10.10.254/24"
           ],
-          "vlan-untagged": 12
+          "vlan-untagged": 13
         }
       ]
     }

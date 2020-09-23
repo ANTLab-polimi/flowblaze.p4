@@ -10,12 +10,9 @@ net = Mininet(switch=ONOSBmv2Switch)
 
 # HOSTS
 info('*** Adding hosts\n')
-h1 = net.addHost('h1', cls=P4Host, ip='10.0.0.1/24', mac="00:00:00:00:00:01",
-                 gateway='10.0.0.254')
-h2 = net.addHost('h2', cls=P4Host, ip='10.0.0.2/24', mac="00:00:00:00:00:02",
-                 gateway='10.0.0.254')
-h10 = net.addHost('h10', cls=P4Host, ip='10.10.10.1/24', mac="00:00:00:00:00:10",
-                  gateway='10.10.10.254')
+h1 = net.addHost('h1', cls=P4Host, ip='10.0.0.1/24', mac="00:00:00:00:00:01")
+h2 = net.addHost('h2', cls=P4Host, ip='10.0.1.1/24', mac="00:00:00:00:00:02")
+h10 = net.addHost('h10', cls=P4Host, ip='10.10.10.1/24', mac="00:00:00:00:00:10")
 
 # SWITCHES
 info('*** Adding switches\n')
@@ -31,11 +28,9 @@ info('*** Starting network\n')
 
 net.start()
 h1.cmd("ip route add default via 10.0.0.254")
-h2.cmd("ip route add default via 10.0.0.254")
+h2.cmd("ip route add default via 10.0.1.254")
 h10.cmd("ip route add default via 10.10.10.254")
 # ARP managed via ARP Proxy in ONOS
-#info('*** Static ARP\n')
-#net.staticArp()
 
 info('*** Running CLI\n')
 CLI(net)

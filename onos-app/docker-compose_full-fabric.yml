@@ -1,7 +1,7 @@
 version: "3"
 
 services:
-  mininet:
+  mininetff:
     image: dmoro92/p4mn:latest
     volumes:
       - ./:/mn_onos
@@ -12,9 +12,9 @@ services:
       - "50002:50002"
       - "50003:50003"
       - "50004:50004"
-    entrypoint: "/mn_onos/topo/entrypoint.sh /mn_onos/topo/topo.py"
+    entrypoint: "/mn_onos/topo/entrypoint.sh /mn_onos/topo/topo_full_fabric.py"
     tty: true
-  onos:
+  onosff:
     image: onosproject/onos:2.2.3
     ports:
       - "8181:8181"
@@ -22,4 +22,4 @@ services:
     environment:
       - ONOS_APPS=drivers,gui,openflow,segmentrouting,drivers.stratum,pipelines.fabric,drivers.bmv2
     links:
-      - mininet
+      - mininetff

@@ -63,7 +63,7 @@
           "ips": [
             "10.0.1.254/24"
           ],
-          "vlan-untagged": 10
+          "vlan-untagged": 11
         }
       ]
     },
@@ -74,7 +74,7 @@
           "ips": [
             "10.10.10.254/24"
           ],
-          "vlan-untagged": 10
+          "vlan-untagged": 12
         }
       ]
     }

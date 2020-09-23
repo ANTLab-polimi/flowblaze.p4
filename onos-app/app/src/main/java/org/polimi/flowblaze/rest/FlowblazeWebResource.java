@@ -185,7 +185,7 @@ public class FlowblazeWebResource extends AbstractWebResource {
     public Response resetFlowblaze() {
         FlowblazeService flowblazeService = get(FlowblazeService.class);
         ObjectNode result = new ObjectMapper().createObjectNode();
-        if (flowblazeService.resetFlowblaze()) {
+        if (!flowblazeService.resetFlowblaze()) {
             result.put("response", "Error when resetting FlowBlaze device");
         }
         return ok(result.toString()).build();
@@ -197,7 +197,7 @@ public class FlowblazeWebResource extends AbstractWebResource {
     public Response resetConditions() {
         FlowblazeService flowblazeService = get(FlowblazeService.class);
         ObjectNode result = new ObjectMapper().createObjectNode();
-        if (flowblazeService.resetConditions()) {
+        if (!flowblazeService.resetConditions()) {
             result.put("response", "Error when resetting conditions");
         }
         return ok(result.toString()).build();
@@ -209,7 +209,7 @@ public class FlowblazeWebResource extends AbstractWebResource {
     public Response resetEfsmEntries() {
         FlowblazeService flowblazeService = get(FlowblazeService.class);
         ObjectNode result = new ObjectMapper().createObjectNode();
-        if (flowblazeService.resetConditions()) {
+        if (!flowblazeService.resetConditions()) {
             result.put("response", "Error when resetting EFSM entries");
         }
         return ok(result.toString()).build();
@@ -221,7 +221,7 @@ public class FlowblazeWebResource extends AbstractWebResource {
     public Response resetPktActions() {
         FlowblazeService flowblazeService = get(FlowblazeService.class);
         ObjectNode result = new ObjectMapper().createObjectNode();
-        if (flowblazeService.resetPktActions()) {
+        if (!flowblazeService.resetPktActions()) {
             result.put("response", "Error when resetting packet actions");
         }
         return ok(result.toString()).build();

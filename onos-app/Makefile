@@ -23,6 +23,15 @@ start:
 stop:
 	docker-compose down
 
+start-full:
+	docker-compose -f docker-compose_full-fabric.yml -p full_fabric up -d
+
+stop-full:
+	docker-compose -f docker-compose_full-fabric.yml -p full_fabric down
+
+push-netcfg-full:
+	onos-netcfg localhost topo/netcfg_full_fabric.json
+
 onos-log:
 	docker-compose logs -f onos
 
@@ -55,3 +64,12 @@ p4runtime_shell:
 	docker run -ti --rm p4lang/p4runtime-sh \
       --grpc-addr 172.28.0.2:50001 \
       --device-id 1 --election-id 0,1
+
+push-json-onos-EXAMPLE:
+	curl -X GET -u onos:rocks 'http://localhost:8181/onos/flowblaze/setDeviceId/device:leaf1'
+	curl -i -X POST -H 'Content-Type: application/json' --data-binary @json_example/efsm_entry.json -u onos:rocks 'http://localhost:8181/onos/flowblaze/setEfsmEntry'
+	curl -i -X POST -H 'Content-Type: application/json' --data-binary @json_example/pkt_actions.json -u onos:rocks 'http://localhost:8181/onos/flowblaze/setPktActions'
+	curl -i -X POST -H 'Content-Type: application/json' --data-binary @json_example/conditions.json -u onos:rocks 'http://localhost:8181/onos/flowblaze/setConditions'
+
+reset-flowblaze-onos:
+	curl -X GET -u onos:rocks 'http://localhost:8181/onos/flowblaze/resetFlowblaze'

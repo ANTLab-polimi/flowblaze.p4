@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Start mininet in a screen session so we can attach to its CLI later.
-screen -dmS cli -L -Logfile screen.log python /mn_onos/topo/topo.py
+screen -dmS cli -L -Logfile screen.log python $1
 
 # Print CLI outoput to stdout as container log. Make sure to tail on an existing
 # file if screen hasn't created it yet...
