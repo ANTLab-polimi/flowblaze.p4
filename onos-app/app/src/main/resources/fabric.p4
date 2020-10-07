@@ -1,5 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
+ * Copyright 2020 Daniele Moro <daniele.moro@polimi.it>
+ *                Davide Sanvito <davide.sanvito@neclab.eu>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +19,7 @@
 #include <core.p4>
 #include <v1model.p4>
 
-
+/* -------------------- FLOWBLAZE configuration parameters -------------------- */
 #define FLOW_SCOPE { hdr.ipv4.src_addr }
 #define METADATA_OPERATION_COND (bit<32>) hdr.ipv4.total_len
 #define EFSM_MATCH_FIELDS  hdr.ipv4.src_addr: ternary;
@@ -34,6 +36,8 @@
 // Configuration parameter left black because not needed
 //
 //    #define CONTEXT_TABLE_SIZE
+/* --------------------------------------------------------------------------- */
+
 #define FABRIC
 #define METADATA_NAME fabric_metadata_t
 #define HEADER_NAME parsed_headers_t

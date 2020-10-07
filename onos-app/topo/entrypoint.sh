@@ -2,6 +2,8 @@
 # Copyright 2018-present Open Networking Foundation
 # SPDX-License-Identifier: Apache-2.0
 
+# From: https://github.com/opennetworkinglab/stratum-onos-demo/blob/master/mininet/topo/entrypoint.sh
+
 # Start mininet in a screen session so we can attach to its CLI later.
 screen -dmS cli -L -Logfile screen.log python $1
 

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// COPY of the PortStatisticsBehavior in ONOS
+// TODO: is there a more elegant way than copy-paste it from ONOS codebase?
 package org.polimi.flowblaze.impl;
 
 import com.google.common.collect.Maps;
@@ -48,8 +50,6 @@ import static org.onosproject.net.pi.model.PiCounterType.INDIRECT;
 /**
  * Implementation of the PortStatisticsBehaviour for Fabric.p4.
  */
-// COPY of the PortStatisticsBehavior in ONOS
-// TODO: is there a more elegant way than copy-paste it from ONOS codebase?
 public class PortStatisticsDiscoveryImpl extends AbstractHandlerBehaviour implements PortStatisticsDiscovery {
     public static final PiCounterId FABRIC_INGRESS_PORT_COUNTERS_CONTROL_EGRESS_PORT_COUNTER =
             PiCounterId.of("FabricIngress.port_counters_control.egress_port_counter");
