@@ -38,3 +38,14 @@ services:
       - ONOS_APPS=drivers,gui,openflow,segmentrouting,drivers.stratum,pipelines.fabric,drivers.bmv2
     links:
       - mininet
+  gui:
+    image: dmoro92/flask:latest
+    volumes:
+      - ../gui:/flowblazeGui
+      - ../p4src:/p4src
+    ports:
+      - "8000:8000"
+    working_dir: /flowblazeGui
+    entrypoint: "python gui.py --debug --p4_file /p4src/rate_limiter/rate_limiter.p4 --json_file /p4src/rate_limiter/p4build/bmv2.json"
+    links:
+      - onos

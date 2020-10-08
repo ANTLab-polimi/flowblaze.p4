@@ -40,10 +40,10 @@ public class EfsmCondition {
                          @JsonProperty("operand2") String op2,
                          @JsonProperty("constOperand1") int constOp1,
                          @JsonProperty("constOperand2") int constOp2) {
-        this.operand1 = REGISTERS.getOrDefault(op1, stringToByte(op1));
+        this.operand1 = REGISTERS.containsKey(op1) ? REGISTERS.get(op1) : stringToByte(op1);
         this.constOperand1 = op1.equals(STRING_CONST_REGISTER) ? constOp1 : 0;
 
-        this.operand2 = REGISTERS.getOrDefault(op2, stringToByte(op2));
+        this.operand2 = REGISTERS.containsKey(op2) ? REGISTERS.get(op2) : stringToByte(op2);
         this.constOperand2 = op2.equals(STRING_CONST_REGISTER) ? constOp2 : 0;
 
         this.operation = op;

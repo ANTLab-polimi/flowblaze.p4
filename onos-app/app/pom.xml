@@ -55,22 +55,7 @@
 
         <dependency>
             <groupId>org.onosproject</groupId>
-            <artifactId>onlab-osgi</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.onosproject</groupId>
             <artifactId>onlab-misc</artifactId>
-            <version>${onos.version}</version>
-            <scope>test</scope>
-            <classifier>tests</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onos-api</artifactId>
             <version>${onos.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
@@ -110,47 +95,6 @@
             <scope>provided</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onos-protocols-p4runtime-utils</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- REST API -->
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onos-rest</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onlab-rest</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.jersey.containers</groupId>
-            <artifactId>jersey-container-servlet</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
     </dependencies>
 
     <build>
@@ -175,7 +119,8 @@
                             *,org.glassfish.jersey.servlet
                         </Import-Package>
                         <Web-ContextPath>${web.context}</Web-ContextPath>
-                        <Karaf-Commands>org.polimi.flowblaze.cli</Karaf-Commands>
+                        <Karaf-Commands>org.polimi.flowblaze.cli
+                        </Karaf-Commands>
                     </instructions>
                 </configuration>
             </plugin>

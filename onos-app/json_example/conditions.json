@@ -9,7 +9,7 @@
     },
     {
       "operation": "NOP",
-      "operand1": "1",
+      "operand1": "META",
       "operand2": "2",
       "constOperand1": 0,
       "constOperand2": 0
