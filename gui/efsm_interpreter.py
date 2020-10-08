@@ -86,8 +86,8 @@ def gdv_register(reg_id):
 
 
 def invalid_transition_str(edge, states):
-    return 'Invalid transition ({})->({}): "{}"'.format(states[int(edge['src'])]["text"],
-                                                        states[int(edge['dst'])]["text"],
+    return 'Invalid transition ({})->({}): "{}"'.format(states[edge['src']]["text"],
+                                                        states[edge['dst']]["text"],
                                                         edge['transition'])
 
 
@@ -132,14 +132,10 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         link['text'] = link['text'].replace(' ', '')
 
         if link['type'] == 'Link':
-            e = {'src': link['nodeA'], 'dst': link['nodeB'], 'transition': link['text'],
-                 'srcID': states[int(link['nodeA'])]["ID"],
-                 'dstID': states[int(link['nodeB'])]["ID"]}
+            e = {'src': link['nodeA'], 'dst': link['nodeB'], 'transition': link['text']}
 
         elif link['type'] == 'SelfLink':
-            e = {'src': link['node'], 'dst': link['node'], 'transition': link['text'],
-                 'srcID': states[int(link['node'])]["ID"],
-                 'dstID': states[int(link['node'])]["ID"]}
+            e = {'src': link['node'], 'dst': link['node'], 'transition': link['text']}
         else:
             logger.warning("Other link:" + str(link))
             continue
