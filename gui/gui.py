@@ -7,7 +7,7 @@ import argparse
 from flask import Flask, request, send_file, redirect, make_response, render_template
 
 from efsm_interpreter import interpret_EFSM
-from onos_rest import push_efsm_table, push_conditions, push_pkt_actions
+from onos_rest import push_efsm_table, push_conditions, push_pkt_actions, DEFAULT_ONOS_IP, DEFAULT_ONOS_PORT
 from p4_json_parser import parse_files
 
 app = Flask(__name__,  static_folder="www/static", template_folder="www/templates")
@@ -71,6 +71,8 @@ def push_cfg_onos():
         return response
     if request.method == 'POST':
         fsm_json = json.loads(request.data.decode('UTF-8'))
+        onos_ip = request.args.get("onosIp", default=DEFAULT_ONOS_IP, type=str)
+        onos_port = request.args.get("onosPort", default=DEFAULT_ONOS_PORT, type=int)
         cli_config, debug_msg, onos_cfg = interpret_EFSM(json_str=fsm_json, packet_actions=list(gui_actions_param.keys()), efsm_match=efsm_match_fields)
         onos_error = False
         response = make_response()
@@ -78,13 +80,13 @@ def push_cfg_onos():
             response.headers["gen_ok"] = True
             # SEND TO ONOS
             for entry in onos_cfg["efsmEntries"]:
-                if not push_efsm_table(entry):
+                if not push_efsm_table(entry, onos_ip, onos_port):
                     onos_error = True
                     debug_msg += ("\nFailed to push EFSM entry: %s" % entry)
-            if not push_conditions({"conditions": onos_cfg["conditions"]}):
+            if not push_conditions({"conditions": onos_cfg["conditions"]}, onos_ip, onos_port):
                 onos_error = True
                 debug_msg += ("\nFailed to push Conditions: %s" % onos_cfg["conditions"])
-            if not push_pkt_actions({"pktActions": onos_cfg["pktActions"]}):
+            if not push_pkt_actions({"pktActions": onos_cfg["pktActions"]}, onos_ip, onos_port):
                 onos_error = True
                 debug_msg += ("\nFailed to push Packet actions: %s" % onos_cfg["pktActions"])
 

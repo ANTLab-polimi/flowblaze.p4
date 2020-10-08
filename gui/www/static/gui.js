@@ -283,9 +283,12 @@ function generateCfg(){
 
 function generateCfgOnos(){
   saveBackup();
+  var onos_ip = document.getElementById("onos_ip").value;
+  var onos_port = document.getElementById("onos_port").value;
+  var params = "onosIp="+onos_ip+"&onosPort="+onos_port;
 
   var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/generateCfgOnos", true);
+  xhr.open("POST", "/generateCfgOnos?"+params, true);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.responseType = 'blob';
   xhr.onload = function () {
