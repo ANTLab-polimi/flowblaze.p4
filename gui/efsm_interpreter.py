@@ -87,8 +87,10 @@ def gdv_register(reg_id):
     return '0x%02X' % (GDV_BASE_REGISTER + (reg_id << 4))
 
 
-def invalid_transition_str(edge):
-    return 'Invalid transition ({})->({}): "{}"'.format(edge['src'], edge['dst'], edge['transition'])
+def invalid_transition_str(edge, states):
+    return 'Invalid transition ({})->({}): "{}"'.format(states[edge['src']]["text"],
+                                                        states[edge['dst']]["text"],
+                                                        edge['transition'])
 
 
 def interpret_EFSM(json_str, packet_actions, efsm_match):
@@ -100,7 +102,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         'pktActions': []
     }
 
-    nodes = json_str['nodes']
+    states = json_str['nodes']
     links = json_str['links']
 
     edges = []
@@ -111,6 +113,25 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     pkt_actions = set()
 
     no_efsm_matches = ["0&&&0" for _ in efsm_match] if efsm_match else []
+
+    # Parse the states from the FSM nodes. Initial state is 0 or any states ending with *
+    i = 1  # custom index of the state, it starts with 0 because the beginning state is always ZERO
+    beginning_state = False
+    for state in states:
+        if state["text"].endswith("*") or state["text"] == '0':
+            if beginning_state:
+                logger.error("Multiple beginning states")
+                dbg_msg += 'Multiple beginning states'
+                return None, dbg_msg, None
+            state["ID"] = 0
+            beginning_state = True
+        else:
+            state["ID"] = i
+            i += 1
+    if not beginning_state:
+        logger.error("Missing beginning state")
+        dbg_msg += 'Missing beginning state'
+        return None, dbg_msg, None
 
     # Parse JSON Graph to extract edges, matches, conditions, register updates and actions to be applied in every state transitions
     for link in links:
@@ -153,20 +174,18 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             if parse_condition(cond):
                 conditions.add(cond)
             else:
-                logger.warning('Cannot parse condition: "%s"' % cond)
-                logger.warning(invalid_transition_str(e))
-                dbg_msg += 'Cannot parse condition: "%s"\n' % cond
-                dbg_msg += invalid_transition_str(e) + '\n'
+                log_msg = ('Cannot parse condition: "%s"\n' % cond) + invalid_transition_str(e, states)
+                logger.warning(log_msg)
+                dbg_msg += log_msg + '\n'
                 return None, dbg_msg, None
 
         e['reg_action'] = list(filter(lambda x: len(x) > 0, tmp[2].split(';')))
         e['reg_action'] = normalized_reg_actions(e['reg_action'])
         if len(e['reg_action']) > MAX_REG_ACTIONS_PER_TRANSITION:
             # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
-            logger.warning('Too many register actions per transition')
-            logger.warning(invalid_transition_str(e))
-            dbg_msg += 'Too many register actions per transition\n'
-            dbg_msg += invalid_transition_str(e) + '\n'
+            log_msg = 'Too many register actions per transition\n' + invalid_transition_str(e, states)
+            logger.warning(log_msg)
+            dbg_msg += log_msg + '\n'
             return None, dbg_msg, None
         for ra in e['reg_action']:
             a = parse_reg_action(ra)
@@ -176,24 +195,27 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                 if res[0] == '#':
                     global_data_variables.add(res)
                 elif res[0] == '@':
-                    logger.warning('Invalid register action: "%s"' % ra)
-                    dbg_msg += 'Invalid register action: "%s"\n' % ra
+                    log_msg = 'Invalid register action: "%s"' % ra
+                    logger.warning(log_msg)
+                    dbg_msg += log_msg + "\n"
                     if res in ['@meta', '@now']:
-                        logger.warning('A register action cannot store the result into @meta or @now')
-                        dbg_msg += 'A register action cannot store the result into @meta or @now\n'
+                        log_msg = 'A register action cannot store the result into @meta or @now'
+                        logger.warning(log_msg)
+                        dbg_msg += log_msg + '\n'
                     else:
-                        logger.warning('Invalid result register: "%s"' % res)
-                        dbg_msg += 'Invalid result register: "%s"\n' % res
-                    logger.warning(invalid_transition_str(e))
-                    dbg_msg += invalid_transition_str(e) + '\n'
+                        log_msg = 'Invalid result register: "%s"' % res
+                        logger.warning(log_msg)
+                        dbg_msg += log_msg + '\n'
+                    log_msg = invalid_transition_str(e, states)
+                    logger.warning(log_msg)
+                    dbg_msg += log_msg + '\n'
                     return None, dbg_msg, None
                 elif res.isnumeric():
-                    logger.warning('Invalid register action: "%s"' % ra)
-                    logger.warning('A register action cannot store the result into a constant')
-                    logger.warning(invalid_transition_str(e))
-                    dbg_msg += 'Invalid register action: "%s"\n' % ra
-                    dbg_msg += 'A register action cannot store the result into a constant\n'
-                    dbg_msg += invalid_transition_str(e) + '\n'
+                    log_msg = ('Invalid register action: "%s"\n' % ra)
+                    log_msg += 'A register action cannot store the result into a constant\n'
+                    log_msg += invalid_transition_str(e, states)
+                    logger.warning(log_msg)
+                    dbg_msg += log_msg + '\n'
                     return None, dbg_msg, None
                 else:
                     flow_data_variables.add(res)
@@ -205,12 +227,11 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         if op in ['@meta', '@now']:
                             pass
                         else:
-                            logger.warning('Invalid register action: "%s"' % ra)
-                            logger.warning('Invalid register operator: "%s"' % op)
-                            logger.warning(invalid_transition_str(e))
-                            dbg_msg += 'Invalid register action: "%s"\n' % ra
-                            dbg_msg += 'Invalid register operator: "%s"\n' % op
-                            dbg_msg += invalid_transition_str(e) + '\n'
+                            log_msg = ('Invalid register action: "%s\n' % ra) + (
+                                        'Invalid register operator: "%s"\n' % op)
+                            log_msg += invalid_transition_str(e, states)
+                            logger.warning(log_msg)
+                            dbg_msg += log_msg + '\n'
                             return None, dbg_msg, None
                     elif op.isnumeric():
                         pass
@@ -218,19 +239,17 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         flow_data_variables.add(op)
                 reg_actions.add(ra)
             else:
-                logger.warning('Cannot parse register action: "%s"' % ra)
-                logger.warning(invalid_transition_str(e))
-                dbg_msg += 'Cannot parse register action: "%s"\n' % ra
-                dbg_msg += invalid_transition_str(e) + '\n'
+                log_msg = ('Cannot parse register action: "%s"\n' % ra) + invalid_transition_str(e, states)
+                logger.warning(log_msg)
+                dbg_msg += log_msg + '\n'
                 return None, dbg_msg, None
 
         e['pkt_action'] = list(filter(lambda x: len(x) > 0, tmp[3].split(';')))
         if len(e['pkt_action']) > 1:
             # NB we adopt an all-or-nothing policy so we can avoid parsing ther rest of the transition
-            logger.warning('Too many packet actions per transition')
-            logger.warning(invalid_transition_str(e))
-            dbg_msg += 'Too many packet actions per transition\n'
-            dbg_msg += invalid_transition_str(e) + '\n'
+            log_msg = 'Too many packet actions per transition\n' + invalid_transition_str(e, states)
+            logger.warning(log_msg)
+            dbg_msg += log_msg + "\n"
             return None, dbg_msg, None
         elif len(e['pkt_action']) == 1:
             e['pkt_action'] = e['pkt_action'][0]
@@ -244,35 +263,24 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
                         pkt_actions.add(e['pkt_action'])
                         break
                 if not found:
-                    logger.warning('Unrecognized packet action: "%s"' % e['pkt_action'])
-                    logger.warning(invalid_transition_str(e))
-                    dbg_msg += 'Unrecognized packet action: "%s"\n' % e['pkt_action']
-                    dbg_msg += invalid_transition_str(e) + '\n'
+                    log_msg = ('Unrecognized packet action: "%s"\n' % e['pkt_action']) + invalid_transition_str(e, states)
+                    logger.warning(log_msg)
+                    dbg_msg += log_msg + "\n"
                     return None, dbg_msg, None
             else:
-                logger.warning('Cannot parse packet action: "%s"' % e['pkt_action'])
-                logger.warning(invalid_transition_str(e))
-                dbg_msg += 'Cannot parse packet action: "%s"\n' % e['pkt_action']
-                dbg_msg += invalid_transition_str(e) + '\n'
+                log_msg = ('Cannot parse packet action: "%s"\n' % e['pkt_action']) + invalid_transition_str(e, states)
+                dbg_msg += log_msg + "\n"
                 return None, dbg_msg, None
         else:
             e['pkt_action'] = None
             if link['type'] == 'Link':
-                logger.warning(
-                    "No action specified for ({})->({}) transition '{}': default action will be applied".format(
-                        e['src'], e['dst'],
-                        e['transition']))
-                dbg_msg += "No action specified for ({})->({}) transition '{}': default action will be applied\n".format(
-                    e['src'], e['dst'],
-                    e['transition'])
+                log_msg = "No action specified for ({})->({}) transition '{}': default action will be applied".format(
+                    states[e['src']]["text"], states[e['dst']]["text"], e['transition'])
             else:
-                logger.warning(
-                    "No action specified for self-transition in state ({}) '{}': default action will be applied".format(
-                        e['src'], e[
-                            'transition']))
-                dbg_msg += "No action specified for self-transition in state ({}) '{}': default action will be applied\n".format(
-                    e['src'], e[
-                        'transition'])
+                log_msg = "No action specified for self-transition in state ({}) '{}': default action will be applied".format(
+                    states[e['src']]["text"], e['transition'])
+            logger.warning(log_msg)
+            dbg_msg += log_msg + "\n"
 
         edges.append(e)
 
@@ -488,13 +496,13 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
     # ------------------------------- Generate entries for the EFSM table ------------------------------------------
     for e in edges:
         tmp = {
-            'state_match': str(e['src']) + "&&&0xFFFF",
+            'state_match': str(states[e['src']]["ID"]) + "&&&0xFFFF",
             'c0_match': '0&&&0',
             'c1_match': '0&&&0',
             'c2_match': '0&&&0',
             'c3_match': '0&&&0',
             'OTHER_MATCH': '',
-            'dest_state': str(e['dst']),
+            'dest_state': str(states[e['dst']]["ID"]),
         }
 
         # Map condition on the edge with the previously generated condition variable
@@ -548,7 +556,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
         onos_efsm_entry = copy.deepcopy(json_efsm_entry)
 
         onos_match = copy.deepcopy(json_match)
-        onos_match["state"] = e['src']
+        onos_match["state"] = states[e['src']]["ID"]
         for c in lst_cond:
             if c[1] in e['condition']:
                 if c[0] == 0:
@@ -568,7 +576,7 @@ def interpret_EFSM(json_str, packet_actions, efsm_match):
             onos_match["efsmExtraMatch"] = extra_match
         onos_efsm_entry["match"] = onos_match
 
-        onos_efsm_entry["nextState"] = e['dst']
+        onos_efsm_entry["nextState"] = states[e['dst']]["ID"]
 
         # By default, json_efsm_entry has 0 in pkt_action field
         if e['pkt_action']:
