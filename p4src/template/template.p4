@@ -33,7 +33,7 @@
 // HERE  here the definition of your header and metadata
 #inclue "metadata_header.p4"
 
-#include "../flowblaze_lib/flowblaze_loop.p4"
+#include "../flowblaze_lib/flowblaze.p4"
 
 parser ParserImpl(packet_in packet, out headers hdr, inout metadata_t meta, inout standard_metadata_t standard_metadata) {
     // Define your Parser
@@ -46,7 +46,7 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
     apply {
         // Invoke FlowBlaze machine
-        FlowBlazeLoop.apply(hdr, meta, standard_metadata);
+        FlowBlaze.apply(hdr, meta, standard_metadata);
     }
 }
 

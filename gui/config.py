@@ -24,20 +24,29 @@ OPERATIONS = {
     "*":    '0x05',    # _MUL = 0x05
 }
 
+ONOS_OPERATIONS = {
+    "0x00": '0x00',
+    "0x01": 'PLUS',
+    "0x02": 'MINUS',
+    "0x03": 'R_SHIFT',
+    "0x04": 'L_SHIFT',
+    "0x05": 'MUL',
+}
+
 REGISTERS = {
       '@meta': '0xF1',     # _META = 0xF1
       '@now':  '0xF2',     # _TIME_NOW = 0xF2
       'EXPL':  '0xFF',     # _EXPL = 0xFF
 }
 
+ONOS_REGISTERS = {
+      '0xF1': 'META',
+      '0xF2': 'NOW',
+      '0xFF': 'CONST',
+}
+
 FDV_BASE_REGISTER = 0x00
 GDV_BASE_REGISTER = 0x0F
-
-META = {
-      '@meta': '0xF1',     # _META = 0xF1
-      '@now':  '0xF2',     # _TIME_NOW = 0xF2
-      'EXPL':  '0xFF',     # _EXPL = 0xFF
-}
 
 CONDITIONS = OrderedDict([
     ("NOP"  ,   '0b000'),    # NO_CONDITION  = 0b000
@@ -47,6 +56,14 @@ CONDITIONS = OrderedDict([
     ('>'    ,   '0b010'),    # CONDITION_GT  = 0b010
     ('<'    ,   '0b100'),    # CONDITION_LT  = 0b100
 ])
+ONOS_CONDITIONS = {
+    '0b000':   'NOP',
+    '0b001':   'EQ',
+    '0b011':   'GTE',
+    '0b101':   'LTE',
+    '0b010':   'GT',
+    '0b100':   'LT',
+}
 
 DEFAULT_PRIO_EFSM = "1"
 
@@ -72,9 +89,11 @@ TEMPLATE_PACKET_ACTION = {
     'parameters':   [],
 }
 
-TEMPLATE_SET_DEFAULT_condition_table = "table_set_default ingress.FlowBlazeLoop.condition_table set_condition_fields" #{cond0} {op1_0} {op2_0} {operand1_0} {operand2_0} {cond1} {op1_1} {op2_1} {operand1_1} {operand2_1} {cond2} {op1_2} {op2_2} {operand1_2} {operand2_2} {cond3} {op1_3} {op2_3} {operand1_3} {operand2_3}"
-TEMPLATE_SET_DEFAULT_EFSMTable = "table_add ingress.FlowBlazeLoop.EFSM_table define_operation_update_state {state_match} {c0_match} {c1_match} {c2_match} {c3_match} {OTHER_MATCH} => {dest_state} {operation_0} {result_0} {op1_0} {op2_0} {operand1_0} {operand2_0} {operation_1} {result_1} {op1_1} {op2_1} {operand1_1} {operand2_1} {operation_2} {result_2} {op1_2} {op2_2} {operand1_2} {operand2_2} {pkt_action} {priority}"
-TEMPLATE_SET_PACKET_ACTIONS = "table_add ingress.FlowBlazeLoop.pkt_action {action} {action_match} => {action_parameters} {priority}"
+TEMPLATE_SET_DEFAULT_condition_table = "table_set_default FlowBlaze.condition_table set_condition_fields" #{cond0} {op1_0} {op2_0} {operand1_0} {operand2_0} {cond1} {op1_1} {op2_1} {operand1_1} {operand2_1} {cond2} {op1_2} {op2_2} {operand1_2} {operand2_2} {cond3} {op1_3} {op2_3} {operand1_3} {operand2_3}"
+TEMPLATE_SET_DEFAULT_EFSMTable = "table_add FlowBlaze.EFSM_table define_operation_update_state {state_match} {c0_match} {c1_match} {c2_match} {c3_match} {OTHER_MATCH} => {dest_state} {operation_0} {result_0} {op1_0} {op2_0} {operand1_0} {operand2_0} {operation_1} {result_1} {op1_1} {op2_1} {operand1_1} {operand2_1} {operation_2} {result_2} {op1_2} {op2_2} {operand1_2} {operand2_2} {pkt_action} {priority}"
+TEMPLATE_SET_PACKET_ACTIONS = "table_add FlowBlaze.pkt_action {action} {action_match} => {action_parameters} {priority}"
+
+FLOWBLAZE_ACTION_PATH = "FlowBlaze."
 
 MAX_CONDITIONS_NUM = 4
 MAX_REG_ACTIONS_PER_TRANSITION = 3

@@ -68,11 +68,11 @@ s1-clear-reg:
 s1-clear-flowblaze:
 	$(info *** Clear FlowBlaze state for S1)
 	@echo "    EFSM Table"
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear ingress.FlowBlazeLoop.EFSM_table" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear FlowBlaze.EFSM_table" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
 	@echo "    Condition Table"
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_set_default ingress.FlowBlazeLoop.condition_table NoAction" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_set_default FlowBlaze.condition_table NoAction" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
 	@echo "    Packet Action"
-	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear ingress.FlowBlazeLoop.pkt_action" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
+	@docker exec -it ${mn_docker_name} /bin/sh -c 'echo "table_clear FlowBlaze.pkt_action" | simple_switch_CLI --thrift-port $$(cat /tmp/bmv2-s1-thrift-port) > /dev/null'
 
 h1-shell:
 	$(info *** Opening H1 shell)

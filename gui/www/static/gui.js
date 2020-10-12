@@ -298,6 +298,29 @@ function generateCfg(){
   xhr.send(localStorage['fsm']);
 }
 
+function generateCfgOnos(){
+  saveBackup();
+  var onos_ip = document.getElementById("onos_ip").value;
+  var onos_port = document.getElementById("onos_port").value;
+  var params = "onosIp="+onos_ip+"&onosPort="+onos_port;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "/generateCfgOnos?"+params, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.responseType = 'blob';
+  xhr.onload = function () {
+    document.getElementById("debug_msg").value = atob(xhr.getResponseHeader('debug_msg'));
+    if (xhr.getResponseHeader('gen_ok') == null || xhr.getResponseHeader('gen_ok') === 'False' ) {
+      alert("The EFSM includes invalid transitions!\nCheck the debug message");
+    } else if (xhr.getResponseHeader('onos_ok') == null || xhr.getResponseHeader('onos_ok') === 'False') {
+      alert("Errors pushing to ONOS!\nCheck the debug message")
+    } else {
+      alert("Pushed to ONOS!")
+    }
+  };
+  xhr.send(localStorage['fsm']);
+}
+
 function saveBlob(blob, fileName) {
   var a = document.createElement('a');
   a.href = window.URL.createObjectURL(blob);

@@ -35,7 +35,7 @@ class TestEfsmInterpreter(unittest.TestCase):
             self.cli_config=f.read()
 
     def test_interpret_EFSM(self):
-        cli_config, _ = interpret_EFSM(json_str=self.input_json,
+        cli_config, _, _ = interpret_EFSM(json_str=self.input_json,
                                        packet_actions=TEST_PACKET_ACTION,
                                        efsm_match=TEST_EFSM_MATCH_HEADER)
         self.assertEqual(cli_config, self.cli_config)

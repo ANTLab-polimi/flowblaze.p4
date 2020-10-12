@@ -74,26 +74,26 @@ def parse_json(json_file):
 
     GUI_match_fields = []
     GUI_actions = []
-    in_pipeline = list(filter(lambda x: x['name'] == 'ingress', j['pipelines']))[0]
-    in_pipeline_tables = list(filter(lambda x: 'ingress.' in x['name'], in_pipeline['tables']))
-    for table in in_pipeline_tables:
+    flowblaze_pipeline = list(filter(lambda x: x['name'] == 'ingress', j['pipelines']))[0]
+    flowblaze_pipeline_tables = list(filter(lambda x: 'FlowBlaze.' in x['name'], flowblaze_pipeline['tables']))
+    for table in flowblaze_pipeline_tables:
         # print(table['name'])
         # print('\tkeys:')
         for field in table['key']:
             # print('\t\t' + field['name'])
-            if table['name'] == 'ingress.FlowBlazeLoop.EFSM_table' and 'meta.flowblaze_metadata.' not in field['name']:
+            if table['name'] == 'FlowBlaze.EFSM_table' and 'meta.flowblaze_metadata.' not in field['name']:
                 GUI_match_fields.append(field['name'])
         # print('\tactions')
         for action in table['actions']:
             # print('\t\t' + action)
-            if table['name'] == 'ingress.FlowBlazeLoop.pkt_action':
-                GUI_actions.append(action.replace('ingress.FlowBlazeLoop.', ''))
+            if table['name'] == 'FlowBlaze.pkt_action':
+                GUI_actions.append(action.replace('FlowBlaze.', ''))
 
     GUI_actions_parameters = {'NoAction': []}
     for action in GUI_actions:
         if action == 'NoAction':
             continue
-        action_data = list(filter(lambda x: x['name'] == 'ingress.FlowBlazeLoop.' + action, j['actions']))[0]
+        action_data = list(filter(lambda x: x['name'] == 'FlowBlaze.' + action, j['actions']))[0]
         GUI_actions_parameters[action] = []
         for param in action_data['runtime_data']:
             GUI_actions_parameters[action].append(param['name'])

@@ -18,6 +18,12 @@
 #ifndef _FLOWBLAZE_LIB_
 #define _FLOWBLAZE_LIB_
 
+// Useful for using flowblaze.p4 with fabric.p4
+#ifndef FABRIC
+#define METADATA_NAME metadata_t
+#define HEADER_NAME headers
+#endif
+
 #define _NO_OP 0x00
 #define _PLUS 0x01
 #define _MINUS 0x02
@@ -49,27 +55,16 @@
 #ifndef CONTEXT_TABLE_SIZE
     #define CONTEXT_TABLE_SIZE 2014
 #endif
-/*
-* TODO:
-*  - Timeouts are not implemented 
-*  - Lack of conditions of packet header (implementable).
-*  - BI-FLOW not implemented (it can be implemented adding a second
-*       lookup hash field and loading also the register of the corresponding second lookup. 
-*       This logic is valid also for the update.)
-*  - Check corner cases like condition not set and update not evaluated.
-*  - Some problems with multicast groups.
-*/
+
 
 // Global Data Variable: 4
 register<bit<32>>(4) reg_G;
 
-// 4 Flow Registers 
+// 4 Flow Registers
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R0;
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R1;
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R2;
 register<bit<32>>(CONTEXT_TABLE_SIZE) reg_R3;
-
-
 
 // Register that stores the state of the flows
 register<bit<16>>(CONTEXT_TABLE_SIZE) reg_state;
@@ -113,7 +108,7 @@ control ConditionBlock(inout flowblaze_single_condition_t meta_c_blk,
                 meta_c_blk.operand1 = (bit<32>) standard_metadata.ingress_global_timestamp;
             }
             // EXPLICIT IS THE DEFAULT BEHAVIOUR
-            //if(meta_c_blk.op1 == _EXPL) { 
+            //if(meta_c_blk.op1 == _EXPL) {
             //    meta_c_blk.operand1 = meta_c_blk.operand1
             //}
 
@@ -149,10 +144,9 @@ control ConditionBlock(inout flowblaze_single_condition_t meta_c_blk,
                 meta_c_blk.operand2 = (bit<32>) standard_metadata.ingress_global_timestamp;
             }
             // EXPLICIT IS THE DEFAULT BEHAVIOUR
-            //if(meta_c_blk.op2 == _EXPL) { 
+            //if(meta_c_blk.op2 == _EXPL) {
             //    meta_c_blk.operand1 = meta_c_blk.operand2
             //}
-
 
             if(meta_c_blk.cond == CONDITION_EQ) {
                 c = (bit<1>) ( meta_c_blk.operand1 == meta_c_blk.operand2);
@@ -176,7 +170,7 @@ control ConditionBlock(inout flowblaze_single_condition_t meta_c_blk,
 
 
 // ----------------------- UPDATE LOGIC BLOCK ----------------------------------
-control UpdateLogic(inout headers hdr,
+control UpdateLogic(inout HEADER_NAME hdr,
                     inout flowblaze_t flowblaze_metadata,
                     inout flowblaze_single_update_t update_block,
                     in standard_metadata_t standard_metadata) {
@@ -185,7 +179,7 @@ control UpdateLogic(inout headers hdr,
         // Calculate update lookup index
         // TODO: (improvement) save hash in metadata when calculated for reading registers
         hash(flowblaze_metadata.update_state_index,
-             HashAlgorithm.crc32, 
+             HashAlgorithm.crc32,
              (bit<32>) 0,
              FLOW_SCOPE,
              (bit<32>) CONTEXT_TABLE_SIZE);
@@ -272,7 +266,7 @@ control UpdateLogic(inout headers hdr,
             if(update_block.operation == _PLUS) {
                 t_result = update_block.operand1 + update_block.operand2;
                 op_done = 0b1;
-            } 
+            }
             if(update_block.operation == _MINUS) {
                 t_result = update_block.operand1 - update_block.operand2;
                 op_done = 0b1;
@@ -292,7 +286,6 @@ control UpdateLogic(inout headers hdr,
 
             // Update the result on the correct register
             if (op_done == 0b1){
-  
                 if(update_block.result == _R0) {
                     reg_R0.write(flowblaze_metadata.update_state_index, t_result);
                 }
@@ -324,26 +317,23 @@ control UpdateLogic(inout headers hdr,
 }
 // ------------------------------------------------------------------------------------
 
-// TODO: change the metadata passed, otherwise meta overwrite flowblaze_t
-control FlowBlazeLoop (inout headers hdr,
-                 //inout flowblaze_t flowblaze_metadata,
-                 inout metadata_t meta,
+control FlowBlaze (inout HEADER_NAME hdr,
+                 inout METADATA_NAME meta,
                  inout standard_metadata_t standard_metadata){
-    
     // ------------------------ EFSM TABLE -----------------------------
+    @name(".FlowBlaze.define_operation_update_state")
     action define_operation_update_state(bit<16> state,
-                                         //bit<9> port,
-                                         bit<8> operation_0, 
-                                         bit<8> result_0, 
-                                         bit<8> op1_0, 
-                                         bit<8> op2_0, 
-                                         bit<32> operand1_0, 
+                                         bit<8> operation_0,
+                                         bit<8> result_0,
+                                         bit<8> op1_0,
+                                         bit<8> op2_0,
+                                         bit<32> operand1_0,
                                          bit<32> operand2_0,
-                                         bit<8> operation_1, 
-                                         bit<8> result_1, 
-                                         bit<8> op1_1, 
-                                         bit<8> op2_1, 
-                                         bit<32> operand1_1, 
+                                         bit<8> operation_1,
+                                         bit<8> result_1,
+                                         bit<8> op1_1,
+                                         bit<8> op2_1,
+                                         bit<32> operand1_1,
                                          bit<32> operand2_1,
                                          bit<8> operation_2,
                                          bit<8> result_2,
@@ -360,7 +350,7 @@ control FlowBlazeLoop (inout headers hdr,
         // Set the packet action to be applied by the main P4 Program,
         //   in this way the user can define arbitrary action to be applied to packet.
         meta.flowblaze_metadata.pkt_action = pkt_action;
-        
+
         // Set operation 1: result = operation(op1, op2)
         meta.flowblaze_metadata.update_block.u_block_0.operation = operation_0;
         meta.flowblaze_metadata.update_block.u_block_0.result = result_0;
@@ -386,18 +376,20 @@ control FlowBlazeLoop (inout headers hdr,
         meta.flowblaze_metadata.update_block.u_block_2.operand2 = operand2_2;
     }
 
+    @name(".FlowBlaze.EFSM_table_counter")
     direct_counter(CounterType.packets_and_bytes) EFSM_table_counter;
+    @name(".FlowBlaze.EFSM_table")
     table EFSM_table {
         actions = {
             define_operation_update_state;
             NoAction;
         }
         key = {
-            meta.flowblaze_metadata.state                : ternary;
-            meta.flowblaze_metadata.c0                   : ternary;
-            meta.flowblaze_metadata.c1                   : ternary;
-            meta.flowblaze_metadata.c2                   : ternary;
-            meta.flowblaze_metadata.c3                   : ternary;
+            meta.flowblaze_metadata.state                : ternary @name("FlowBlaze.state");
+            meta.flowblaze_metadata.c0                   : ternary @name("FlowBlaze.condition0");
+            meta.flowblaze_metadata.c1                   : ternary @name("FlowBlaze.condition1");
+            meta.flowblaze_metadata.c2                   : ternary @name("FlowBlaze.condition2");
+            meta.flowblaze_metadata.c3                   : ternary @name("FlowBlaze.condition3");
             #ifdef EFSM_MATCH_FIELDS
                 EFSM_MATCH_FIELDS
             #endif
@@ -405,14 +397,14 @@ control FlowBlazeLoop (inout headers hdr,
         default_action = NoAction;
         counters = EFSM_table_counter;
     }
-    
     // ------------------------------------------------------------------------
 
     // ----------------------------- CONTEXT LOOKUP ---------------------------
+    @name(".FlowBlaze.lookup_context_table")
     action lookup_context_table() {
         // Calculate lookup index
         hash(meta.flowblaze_metadata.lookup_state_index,
-             HashAlgorithm.crc32, 
+             HashAlgorithm.crc32,
              (bit<32>) 0,
              FLOW_SCOPE,
              (bit<32>)CONTEXT_TABLE_SIZE);
@@ -431,7 +423,9 @@ control FlowBlazeLoop (inout headers hdr,
         reg_G.read(meta.flowblaze_metadata.G3, 3);
     }
 
+    @name(".FlowBlaze.context_lookup_counter")
     direct_counter(CounterType.packets_and_bytes) context_lookup_counter;
+    @name(".FlowBlaze.context_lookup")
     table context_lookup {
         actions = {
             lookup_context_table;
@@ -440,11 +434,11 @@ control FlowBlazeLoop (inout headers hdr,
         default_action = lookup_context_table();
         counters = context_lookup_counter;
     }
-
     // --------------------------------------------------------------------------
 
 
     // -------------------------------- CONDITION TABLE -------------------------
+    @name(".FlowBlaze.set_condition_fields")
     action set_condition_fields(bit<3> cond0,
                                 bit<8> op1_0,
                                 bit<8> op2_0,
@@ -485,9 +479,11 @@ control FlowBlazeLoop (inout headers hdr,
         meta.flowblaze_metadata.condition_block.c_block_3.op2 = op2_3;
         meta.flowblaze_metadata.condition_block.c_block_3.operand1 = operand1_3;
         meta.flowblaze_metadata.condition_block.c_block_3.operand2 = operand2_3;
-
     }
+
+    @name(".FlowBlaze.condition_table_counter")
     direct_counter(CounterType.packets_and_bytes) condition_table_counter;
+    @name(".FlowBlaze.condition_table")
     table condition_table {
         actions = {
             set_condition_fields;
@@ -501,12 +497,13 @@ control FlowBlazeLoop (inout headers hdr,
         CUSTOM_ACTIONS_DEFINITION
     #endif
 
+    @name(".FlowBlaze.pkt_action_counter")
     direct_counter(CounterType.packets_and_bytes) pkt_action_counter;
-
+    @name(".FlowBlaze.pkt_action")
     table pkt_action {
         key = {
             // TODO: we can use exact match instead of ternary
-            meta.flowblaze_metadata.pkt_action : ternary;
+            meta.flowblaze_metadata.pkt_action : ternary @name("FlowBlaze.pkt_action");
         }
         actions = {
             #ifdef CUSTOM_ACTIONS_DECLARATION
@@ -518,7 +515,6 @@ control FlowBlazeLoop (inout headers hdr,
         default_action = NoAction();
         counters = pkt_action_counter;
     }
-
     // --------------------------------------------------------------------------
 
 
@@ -530,7 +526,6 @@ control FlowBlazeLoop (inout headers hdr,
             meta.flowblaze_metadata.pkt_data = (bit<32>) (METADATA_OPERATION_COND & 0xFFFFFFFF);
         #endif
         context_lookup.apply();
-        // TODO: FIND a way to implement in a clever way the condition block. It's a little bit messy and ugly like this
         condition_table.apply();
         bit<1> tmp_cnd;
         condition_block.apply(meta.flowblaze_metadata.condition_block.c_block_0, meta.flowblaze_metadata, standard_metadata, tmp_cnd);
@@ -541,7 +536,6 @@ control FlowBlazeLoop (inout headers hdr,
         meta.flowblaze_metadata.c2 = tmp_cnd;
         condition_block.apply(meta.flowblaze_metadata.condition_block.c_block_3, meta.flowblaze_metadata, standard_metadata, tmp_cnd);
         meta.flowblaze_metadata.c3 = tmp_cnd;
-        
 
         EFSM_table.apply();
         update_logic.apply(hdr, meta.flowblaze_metadata, meta.flowblaze_metadata.update_block.u_block_0, standard_metadata);
@@ -551,6 +545,5 @@ control FlowBlazeLoop (inout headers hdr,
         pkt_action.apply();
 
     }
-
 }
 #endif
