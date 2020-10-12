@@ -22,7 +22,8 @@ import argparse
 from flask import Flask, request, send_file, redirect, make_response, render_template
 
 from efsm_interpreter import interpret_EFSM
-from onos_rest import push_efsm_table, push_conditions, push_pkt_actions, DEFAULT_ONOS_IP, DEFAULT_ONOS_PORT
+from onos_rest import push_efsm_table, push_conditions, push_pkt_actions, DEFAULT_ONOS_IP, DEFAULT_ONOS_PORT, \
+    config_flowblaze_device_id, DEFAULT_FLOWBLAZE_DEVICE_ID
 from p4_json_parser import parse_files
 
 app = Flask(__name__,  static_folder="www/static", template_folder="www/templates")
@@ -89,12 +90,16 @@ def push_cfg_onos():
         fsm_json = json.loads(request.data.decode('UTF-8'))
         onos_ip = request.args.get("onosIp", default=DEFAULT_ONOS_IP, type=str)
         onos_port = request.args.get("onosPort", default=DEFAULT_ONOS_PORT, type=int)
+        flowblaze_device_id = request.args.get("flowBlazeDevId", default=DEFAULT_FLOWBLAZE_DEVICE_ID, type=str)
         cli_config, debug_msg, onos_cfg = interpret_EFSM(json_str=fsm_json, packet_actions=list(gui_actions_param.keys()), efsm_match=efsm_match_fields)
         onos_error = False
         response = make_response()
         if cli_config:
             response.headers["gen_ok"] = True
-            # SEND TO ONOS
+
+            # First set device ID in ONOS
+            config_flowblaze_device_id(flowblaze_device_id, onos_ip, onos_port)
+            # Send entires to ONOS
             for entry in onos_cfg["efsmEntries"]:
                 if not push_efsm_table(entry, onos_ip, onos_port):
                     onos_error = True

@@ -302,7 +302,8 @@ function generateCfgOnos(){
   saveBackup();
   var onos_ip = document.getElementById("onos_ip").value;
   var onos_port = document.getElementById("onos_port").value;
-  var params = "onosIp="+onos_ip+"&onosPort="+onos_port;
+  var flwblz_dev_id = document.getElementById("flwblz_dev_id").value;
+  var params = "onosIp="+onos_ip+"&onosPort="+onos_port+"&flowBlazeDevId="+flwblz_dev_id;
 
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "/generateCfgOnos?"+params, true);
