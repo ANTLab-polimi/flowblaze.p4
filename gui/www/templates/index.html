@@ -139,6 +139,17 @@
   </tr>
 </table>
 <br>
+{% if onos %}
+<table class="transitionBuilderTable">
+  <tr>
+    <td style="text-align: left">ONOS address</td>
+  </tr>
+  <tr>
+    <td>ONOS IP <input type="text" value="onos" id="onos_ip"></td>
+    <td>ONOS REST API Port <input type="text" value="8181" id="onos_port"></td>
+  </tr>
+</table>
+{% endif %}
 
 <input type="file" id="fileinput" accept="application/json" style="display: none">
 
@@ -150,6 +161,9 @@
     <td><button class="button" style="background-color: #696969" onclick="loadSampleFSMrate()">LOAD SAMPLE FSM 1</button></td>
     <td><button class="button" style="background-color: #696969" onclick="loadSampleFSMcount()">LOAD SAMPLE FSM 2</button></td>
     <td><button class="button" style="background-color: #696969" onclick="generateCfg()">GENERATE SWITCH CONFIG</button></td>
+    {% if onos %}
+    <td><button class="button" style="background-color: #696969" onclick="generateCfgOnos()">GENERATE SWITCH CONFIG ONOS</button></td>
+    {% endif %}
     <td><button class="button" style="background-color: #696969" onclick="clearFSM()">CLEAR FSM</button></td>
   </tr>
   <tr>

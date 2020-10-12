@@ -23,9 +23,11 @@
 
 #define FLOW_SCOPE { hdr.ipv4.srcAddr, hdr.ipv4.dstAddr }
 #define METADATA_OPERATION_COND (bit<32>) meta.l4Length
-#define CUSTOM_ACTIONS_DEFINITION action forward() { \
+#define CUSTOM_ACTIONS_DEFINITION @name(".FlowBlaze.forward") \
+                                  action forward() { \
                                     \
                                   } \
+                                  @name(".FlowBlaze.drop") \
                                   action drop() { \
                                     mark_to_drop(standard_metadata); \
                                     exit; \
@@ -39,7 +41,7 @@
 #include "../flowblaze_lib/flowblaze_metadata.p4"
 #include "headers.p4"
 #include "metadata.p4"
-#include "../flowblaze_lib/flowblaze_loop.p4"
+#include "../flowblaze_lib/flowblaze.p4"
 
 
 const bit<16> ETH_TYPE_IPV4 = 0x800;
@@ -116,7 +118,7 @@ control ingress(inout headers hdr, inout metadata_t meta, inout standard_metadat
 
     apply {
         if (hdr.ethernet.isValid()) {
-            FlowBlazeLoop.apply(hdr, meta, standard_metadata);
+            FlowBlaze.apply(hdr, meta, standard_metadata);
             t_l2_fwd.apply();
         }
     }
