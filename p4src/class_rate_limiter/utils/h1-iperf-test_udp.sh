@@ -21,6 +21,6 @@ echo "*** Opening iperf server on H10"
 SERVER_PID=$!
 echo "    PID: ${SERVER_PID}"
 echo "*** Opening iperf client on H1"
-/mininet/util/m h1 iperf -c 10.10.10.1 -p 5001 -u -b 2000Kbps -t 60
+/mininet/util/m h1 iperf -c 10.10.10.1 -p 5001 -u -b 2000Kbps -t 20
 echo "*** Killing iperf server on H10"
 kill -9 ${SERVER_PID}
