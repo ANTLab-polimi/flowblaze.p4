@@ -10,7 +10,7 @@ It will first compile the P4 program (the output is in `./p4build`) and then sta
 Then click on **LOAD SAMPLE FSM 2**, and click on **GENERATE SWITCH CONFIG**. This will trigger the download of a switch configuration.
 Now, you can override the file `flowblaze_config.cli` with the just downloaded file (make sure to keep the same name).
 
-**TODO: add image of State Machine from GUI**
+![](packet_limiter_gui.png)
 
 ## Run Mininet
 Topology: `h1 <--> s1 <--> h2`

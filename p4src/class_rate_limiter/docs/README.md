@@ -12,7 +12,7 @@ Then click on **LOAD FSM** and load the file `EFSM_class_rate_limiter.json`. The
 this will trigger the download of a switch configuration. Now, you can override the file `flowblaze_config.cli` 
 with the just downloaded file (make sure to keep the same name).
 
-**TODO: add image of State Machine from GUI**
+![](rate_limiter_gui.png)
 
 ## Run Mininet
 Topology: 
