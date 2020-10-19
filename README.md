@@ -4,7 +4,7 @@ FlowBlaze.p4 is a library for the quick prototyping of stateful SDN applications
 
 This repository contains the open-source implementation of FlowBlaze.p4 together with some demo applications.
 
-Folders in the `p4src` directory, includes a per-application README file.
+Folders in the `p4src` directory include a per-application README file.
 
 ## Pre-requisites
 
