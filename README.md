@@ -17,11 +17,13 @@ Before running the demo applications, build the required dependencies
 make deps
 ```
 ## FlowBlaze demo applications
-### Packet Limiter
-**Go to [Packet Limiter](p4src/packet_limiter/docs/README.md)**
 
-### Rate Limiter
-**Go to [Rate Limiter](p4src/class_rate_limiter/docs/README.md)**
+- [Packet Limiter](p4src/packet_limiter/docs/README.md)
+- [Rate Limiter](p4src/class_rate_limiter/docs/README.md)
+
+## FlowBlaze template application
+
+- [Template](p4src/template/README.md)
 
 ## Reference
 
@@ -31,3 +33,23 @@ FlowBlaze.p4: a library for quick prototyping of stateful SDN applications in P4
 D. Moro, D. Sanvito, A. Capone
 IEEE NFV-SDN 2020, November 2020
 ```
+
+## Contact
+
+### Support
+
+If you have any questions, please use GitHub's [issue system](https://github.com/ANTLab-polimi/flowblaze.p4/issues)
+
+### Contribute
+
+Your contributions are very welcome! Please fork the GitHub repository and create a pull request.
+
+### Lead developers
+
+Daniele Moro
+* Mail <daniele (dot) moro (at) polimi (dot) it>
+* Github: [@daniele-moro](https://github.com/daniele-moro)
+
+Davide Sanvito
+* Mail: <davide (dot) sanvito (at) neclab (dot) eu>
+* GitHub: [@DavideSanvito](https://github.com/DavideSanvito)
