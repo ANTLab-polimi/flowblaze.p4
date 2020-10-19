@@ -31,7 +31,7 @@ If you use FlowBlaze.p4 for your research and/or other publications, please cite
 ```
 FlowBlaze.p4: a library for quick prototyping of stateful SDN applications in P4
 D. Moro, D. Sanvito, A. Capone
-IEEE NFV-SDN 2020, November 2020
+IEEE NFV-SDN 2020
 ```
 
 ## Contact
