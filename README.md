@@ -18,12 +18,12 @@ make deps
 ```
 ## FlowBlaze demo applications
 
-- [Packet Limiter](p4src/packet_limiter/docs/README.md)
-- [Rate Limiter](p4src/class_rate_limiter/docs/README.md)
+- [Packet Limiter](p4src/packet_limiter)
+- [Rate Limiter](p4src/class_rate_limiter)
 
 ## FlowBlaze template application
 
-- [Template](p4src/template/README.md)
+- [Template](p4src/template)
 
 ## Reference
 
